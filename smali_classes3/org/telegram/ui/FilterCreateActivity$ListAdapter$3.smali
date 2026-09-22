@@ -1,0 +1,58 @@
+.class Lorg/telegram/ui/FilterCreateActivity$ListAdapter$3;
+.super Lorg/telegram/ui/FilterCreateActivity$LinkCell;
+.source "SourceFile"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingMethod;
+    value = Lorg/telegram/ui/FilterCreateActivity$ListAdapter;->onCreateViewHolder(Landroid/view/ViewGroup;I)Landroidx/recyclerview/widget/q;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x1
+    name = null
+.end annotation
+
+
+# instance fields
+.field final synthetic this$1:Lorg/telegram/ui/FilterCreateActivity$ListAdapter;
+
+
+# direct methods
+.method public constructor <init>(Lorg/telegram/ui/FilterCreateActivity$ListAdapter;Landroid/content/Context;Lorg/telegram/ui/ActionBar/BaseFragment;II)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lorg/telegram/ui/FilterCreateActivity$ListAdapter$3;->this$1:Lorg/telegram/ui/FilterCreateActivity$ListAdapter;
+
+    .line 2
+    .line 3
+    invoke-direct {p0, p2, p3, p4, p5}, Lorg/telegram/ui/FilterCreateActivity$LinkCell;-><init>(Landroid/content/Context;Lorg/telegram/ui/ActionBar/BaseFragment;II)V
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+.end method
+
+
+# virtual methods
+.method public onDelete(Lorg/telegram/tgnet/tl/TL_chatlists$TL_exportedChatlistInvite;)V
+    .locals 1
+
+    .line 1
+    iget-object v0, p0, Lorg/telegram/ui/FilterCreateActivity$ListAdapter$3;->this$1:Lorg/telegram/ui/FilterCreateActivity$ListAdapter;
+
+    .line 2
+    .line 3
+    iget-object v0, v0, Lorg/telegram/ui/FilterCreateActivity$ListAdapter;->this$0:Lorg/telegram/ui/FilterCreateActivity;
+
+    .line 4
+    .line 5
+    invoke-static {v0, p1}, Lorg/telegram/ui/FilterCreateActivity;->access$2000(Lorg/telegram/ui/FilterCreateActivity;Lorg/telegram/tgnet/tl/TL_chatlists$TL_exportedChatlistInvite;)V
+
+    .line 6
+    .line 7
+    .line 8
+    return-void
+.end method

@@ -1,0 +1,114 @@
+.class public final synthetic Ldc/e3;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+# interfaces
+.implements Lorg/telegram/messenger/Utilities$Callback;
+
+
+# instance fields
+.field public final synthetic a:I
+
+.field public final synthetic b:Ldc/g3;
+
+.field public final synthetic c:Lp0/a;
+
+
+# direct methods
+.method public synthetic constructor <init>(Ldc/g3;Lp0/a;I)V
+    .locals 0
+
+    .line 1
+    iput p3, p0, Ldc/e3;->a:I
+
+    iput-object p1, p0, Ldc/e3;->b:Ldc/g3;
+
+    iput-object p2, p0, Ldc/e3;->c:Lp0/a;
+
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public final run(Ljava/lang/Object;)V
+    .locals 2
+
+    .line 1
+    iget v0, p0, Ldc/e3;->a:I
+
+    .line 2
+    .line 3
+    check-cast p1, Ljava/lang/Integer;
+
+    .line 4
+    .line 5
+    packed-switch v0, :pswitch_data_0
+
+    .line 6
+    .line 7
+    .line 8
+    iget-object v0, p0, Ldc/e3;->b:Ldc/g3;
+
+    .line 9
+    .line 10
+    invoke-virtual {v0}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
+
+    .line 11
+    .line 12
+    .line 13
+    iget-object v1, p0, Ldc/e3;->c:Lp0/a;
+
+    .line 14
+    .line 15
+    invoke-interface {v1, p1}, Lp0/a;->accept(Ljava/lang/Object;)V
+
+    .line 16
+    .line 17
+    .line 18
+    invoke-virtual {v0}, Ldc/g3;->g()V
+
+    .line 19
+    .line 20
+    .line 21
+    invoke-virtual {v0}, Ldc/g3;->l()V
+
+    .line 22
+    .line 23
+    .line 24
+    return-void
+
+    .line 25
+    :pswitch_0
+    iget-object v0, p0, Ldc/e3;->b:Ldc/g3;
+
+    .line 26
+    .line 27
+    invoke-virtual {v0}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
+
+    .line 28
+    .line 29
+    .line 30
+    iget-object v1, p0, Ldc/e3;->c:Lp0/a;
+
+    .line 31
+    .line 32
+    invoke-interface {v1, p1}, Lp0/a;->accept(Ljava/lang/Object;)V
+
+    .line 33
+    .line 34
+    .line 35
+    invoke-virtual {v0}, Ldc/g3;->g()V
+
+    .line 36
+    .line 37
+    .line 38
+    return-void
+
+    .line 39
+    :pswitch_data_0
+    .packed-switch 0x0
+        :pswitch_0
+    .end packed-switch
+.end method

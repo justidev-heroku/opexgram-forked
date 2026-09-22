@@ -1,0 +1,63 @@
+.class Lorg/telegram/ui/web/WebBrowserSettings$1;
+.super Lorg/telegram/ui/Components/CombinedDrawable;
+.source "SourceFile"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingMethod;
+    value = Lorg/telegram/ui/web/WebBrowserSettings;->createView(Landroid/content/Context;)Landroid/view/View;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x1
+    name = null
+.end annotation
+
+
+# instance fields
+.field final synthetic this$0:Lorg/telegram/ui/web/WebBrowserSettings;
+
+
+# direct methods
+.method public constructor <init>(Lorg/telegram/ui/web/WebBrowserSettings;Landroid/graphics/drawable/Drawable;Landroid/graphics/drawable/Drawable;)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lorg/telegram/ui/web/WebBrowserSettings$1;->this$0:Lorg/telegram/ui/web/WebBrowserSettings;
+
+    .line 2
+    .line 3
+    invoke-direct {p0, p2, p3}, Lorg/telegram/ui/Components/CombinedDrawable;-><init>(Landroid/graphics/drawable/Drawable;Landroid/graphics/drawable/Drawable;)V
+
+    .line 4
+    .line 5
+    .line 6
+    const/high16 p1, 0x40000000    # 2.0f
+
+    .line 7
+    .line 8
+    invoke-static {p1}, Lorg/telegram/messenger/AndroidUtilities;->dp(F)I
+
+    .line 9
+    .line 10
+    .line 11
+    move-result p1
+
+    .line 12
+    int-to-float p1, p1
+
+    .line 13
+    iput p1, p0, Lorg/telegram/ui/Components/CombinedDrawable;->translateX:F
+
+    .line 14
+    .line 15
+    return-void
+.end method
+
+
+# virtual methods
+.method public setColorFilter(Landroid/graphics/ColorFilter;)V
+    .locals 0
+
+    return-void
+.end method

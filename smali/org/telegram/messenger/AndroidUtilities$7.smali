@@ -1,0 +1,62 @@
+.class Lorg/telegram/messenger/AndroidUtilities$7;
+.super Landroid/text/style/CharacterStyle;
+.source "SourceFile"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingMethod;
+    value = Lorg/telegram/messenger/AndroidUtilities;->replaceSingleLink(Ljava/lang/String;ILjava/lang/Runnable;)Landroid/text/SpannableStringBuilder;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x1
+    name = null
+.end annotation
+
+
+# instance fields
+.field final synthetic val$color:I
+
+
+# direct methods
+.method public constructor <init>(I)V
+    .locals 0
+
+    .line 1
+    iput p1, p0, Lorg/telegram/messenger/AndroidUtilities$7;->val$color:I
+
+    .line 2
+    .line 3
+    invoke-direct {p0}, Landroid/text/style/CharacterStyle;-><init>()V
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+.end method
+
+
+# virtual methods
+.method public updateDrawState(Landroid/text/TextPaint;)V
+    .locals 1
+
+    .line 1
+    const/4 v0, 0x0
+
+    .line 2
+    invoke-virtual {p1, v0}, Landroid/graphics/Paint;->setUnderlineText(Z)V
+
+    .line 3
+    .line 4
+    .line 5
+    iget v0, p0, Lorg/telegram/messenger/AndroidUtilities$7;->val$color:I
+
+    .line 6
+    .line 7
+    invoke-virtual {p1, v0}, Landroid/graphics/Paint;->setColor(I)V
+
+    .line 8
+    .line 9
+    .line 10
+    return-void
+.end method

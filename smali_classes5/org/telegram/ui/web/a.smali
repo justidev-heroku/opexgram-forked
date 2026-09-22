@@ -1,0 +1,58 @@
+.class public final synthetic Lorg/telegram/ui/web/a;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+# interfaces
+.implements Ljava/util/Comparator;
+
+
+# instance fields
+.field public final synthetic a:I
+
+
+# direct methods
+.method public synthetic constructor <init>(I)V
+    .locals 0
+
+    .line 1
+    iput p1, p0, Lorg/telegram/ui/web/a;->a:I
+
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public final compare(Ljava/lang/Object;Ljava/lang/Object;)I
+    .locals 1
+
+    .line 1
+    iget v0, p0, Lorg/telegram/ui/web/a;->a:I
+
+    check-cast p1, Lorg/telegram/ui/web/AddressBarList$QueryEntry;
+
+    check-cast p2, Lorg/telegram/ui/web/AddressBarList$QueryEntry;
+
+    packed-switch v0, :pswitch_data_0
+
+    invoke-static {p1, p2}, Lorg/telegram/ui/web/AddressBarList;->e(Lorg/telegram/ui/web/AddressBarList$QueryEntry;Lorg/telegram/ui/web/AddressBarList$QueryEntry;)I
+
+    move-result p1
+
+    return p1
+
+    :pswitch_0
+    invoke-static {p1, p2}, Lorg/telegram/ui/web/AddressBarList;->a(Lorg/telegram/ui/web/AddressBarList$QueryEntry;Lorg/telegram/ui/web/AddressBarList$QueryEntry;)I
+
+    move-result p1
+
+    return p1
+
+    nop
+
+    :pswitch_data_0
+    .packed-switch 0x0
+        :pswitch_0
+    .end packed-switch
+.end method

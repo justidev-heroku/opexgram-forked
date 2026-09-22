@@ -1,0 +1,365 @@
+.class public Lru/noties/jlatexmath/awt/Color;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+
+# static fields
+.field public static final BLACK:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final RED:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final black:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final blue:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final cyan:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final green:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final magenta:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final red:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final white:Lru/noties/jlatexmath/awt/Color;
+
+.field public static final yellow:Lru/noties/jlatexmath/awt/Color;
+
+
+# instance fields
+.field private final color:I
+
+
+# direct methods
+.method static constructor <clinit>()V
+    .locals 4
+
+    .line 1
+    new-instance v0, Lru/noties/jlatexmath/awt/Color;
+
+    .line 2
+    .line 3
+    const/high16 v1, -0x1000000
+
+    .line 4
+    .line 5
+    invoke-direct {v0, v1}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 6
+    .line 7
+    .line 8
+    sput-object v0, Lru/noties/jlatexmath/awt/Color;->black:Lru/noties/jlatexmath/awt/Color;
+
+    .line 9
+    .line 10
+    new-instance v1, Lru/noties/jlatexmath/awt/Color;
+
+    .line 11
+    .line 12
+    const/4 v2, -0x1
+
+    .line 13
+    invoke-direct {v1, v2}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 14
+    .line 15
+    .line 16
+    sput-object v1, Lru/noties/jlatexmath/awt/Color;->white:Lru/noties/jlatexmath/awt/Color;
+
+    .line 17
+    .line 18
+    new-instance v1, Lru/noties/jlatexmath/awt/Color;
+
+    .line 19
+    .line 20
+    const/high16 v2, -0x10000
+
+    .line 21
+    .line 22
+    invoke-direct {v1, v2}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 23
+    .line 24
+    .line 25
+    sput-object v1, Lru/noties/jlatexmath/awt/Color;->red:Lru/noties/jlatexmath/awt/Color;
+
+    .line 26
+    .line 27
+    new-instance v2, Lru/noties/jlatexmath/awt/Color;
+
+    .line 28
+    .line 29
+    const v3, -0xff0100
+
+    .line 30
+    .line 31
+    .line 32
+    invoke-direct {v2, v3}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 33
+    .line 34
+    .line 35
+    sput-object v2, Lru/noties/jlatexmath/awt/Color;->green:Lru/noties/jlatexmath/awt/Color;
+
+    .line 36
+    .line 37
+    new-instance v2, Lru/noties/jlatexmath/awt/Color;
+
+    .line 38
+    .line 39
+    const v3, -0xffff01
+
+    .line 40
+    .line 41
+    .line 42
+    invoke-direct {v2, v3}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 43
+    .line 44
+    .line 45
+    sput-object v2, Lru/noties/jlatexmath/awt/Color;->blue:Lru/noties/jlatexmath/awt/Color;
+
+    .line 46
+    .line 47
+    new-instance v2, Lru/noties/jlatexmath/awt/Color;
+
+    .line 48
+    .line 49
+    const-string v3, "cyan"
+
+    .line 50
+    .line 51
+    invoke-static {v3}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    .line 52
+    .line 53
+    .line 54
+    move-result v3
+
+    .line 55
+    invoke-direct {v2, v3}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 56
+    .line 57
+    .line 58
+    sput-object v2, Lru/noties/jlatexmath/awt/Color;->cyan:Lru/noties/jlatexmath/awt/Color;
+
+    .line 59
+    .line 60
+    new-instance v2, Lru/noties/jlatexmath/awt/Color;
+
+    .line 61
+    .line 62
+    const-string v3, "magenta"
+
+    .line 63
+    .line 64
+    invoke-static {v3}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    .line 65
+    .line 66
+    .line 67
+    move-result v3
+
+    .line 68
+    invoke-direct {v2, v3}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 69
+    .line 70
+    .line 71
+    sput-object v2, Lru/noties/jlatexmath/awt/Color;->magenta:Lru/noties/jlatexmath/awt/Color;
+
+    .line 72
+    .line 73
+    new-instance v2, Lru/noties/jlatexmath/awt/Color;
+
+    .line 74
+    .line 75
+    const-string v3, "yellow"
+
+    .line 76
+    .line 77
+    invoke-static {v3}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    .line 78
+    .line 79
+    .line 80
+    move-result v3
+
+    .line 81
+    invoke-direct {v2, v3}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 82
+    .line 83
+    .line 84
+    sput-object v2, Lru/noties/jlatexmath/awt/Color;->yellow:Lru/noties/jlatexmath/awt/Color;
+
+    .line 85
+    .line 86
+    sput-object v0, Lru/noties/jlatexmath/awt/Color;->BLACK:Lru/noties/jlatexmath/awt/Color;
+
+    .line 87
+    .line 88
+    sput-object v1, Lru/noties/jlatexmath/awt/Color;->RED:Lru/noties/jlatexmath/awt/Color;
+
+    .line 89
+    .line 90
+    return-void
+.end method
+
+.method public constructor <init>(FFF)V
+    .locals 2
+
+    const/high16 v0, 0x437f0000    # 255.0f
+
+    mul-float p1, p1, v0
+
+    const/high16 v1, 0x3f000000    # 0.5f
+
+    add-float/2addr p1, v1
+
+    float-to-int p1, p1
+
+    mul-float p2, p2, v0
+
+    add-float/2addr p2, v1
+
+    float-to-int p2, p2
+
+    mul-float p3, p3, v0
+
+    add-float/2addr p3, v1
+
+    float-to-int p3, p3
+
+    .line 4
+    invoke-direct {p0, p1, p2, p3}, Lru/noties/jlatexmath/awt/Color;-><init>(III)V
+
+    return-void
+.end method
+
+.method public constructor <init>(I)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    iput p1, p0, Lru/noties/jlatexmath/awt/Color;->color:I
+
+    return-void
+.end method
+
+.method public constructor <init>(III)V
+    .locals 0
+
+    .line 3
+    invoke-static {p1, p2, p3}, Landroid/graphics/Color;->rgb(III)I
+
+    move-result p1
+
+    invoke-direct {p0, p1}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    return-void
+.end method
+
+.method public static decode(Ljava/lang/String;)Lru/noties/jlatexmath/awt/Color;
+    .locals 1
+
+    .line 1
+    new-instance v0, Lru/noties/jlatexmath/awt/Color;
+
+    .line 2
+    .line 3
+    invoke-static {p0}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    .line 4
+    .line 5
+    .line 6
+    move-result p0
+
+    .line 7
+    invoke-direct {v0, p0}, Lru/noties/jlatexmath/awt/Color;-><init>(I)V
+
+    .line 8
+    .line 9
+    .line 10
+    return-object v0
+.end method
+
+
+# virtual methods
+.method public getAlpha()I
+    .locals 1
+
+    const/16 v0, 0xff
+
+    return v0
+.end method
+
+.method public getBlue()I
+    .locals 1
+
+    .line 1
+    iget v0, p0, Lru/noties/jlatexmath/awt/Color;->color:I
+
+    .line 2
+    .line 3
+    invoke-static {v0}, Landroid/graphics/Color;->blue(I)I
+
+    .line 4
+    .line 5
+    .line 6
+    move-result v0
+
+    .line 7
+    return v0
+.end method
+
+.method public getColorInt()I
+    .locals 1
+
+    .line 1
+    iget v0, p0, Lru/noties/jlatexmath/awt/Color;->color:I
+
+    .line 2
+    .line 3
+    return v0
+.end method
+
+.method public getGreen()I
+    .locals 1
+
+    .line 1
+    iget v0, p0, Lru/noties/jlatexmath/awt/Color;->color:I
+
+    .line 2
+    .line 3
+    invoke-static {v0}, Landroid/graphics/Color;->green(I)I
+
+    .line 4
+    .line 5
+    .line 6
+    move-result v0
+
+    .line 7
+    return v0
+.end method
+
+.method public getRed()I
+    .locals 1
+
+    .line 1
+    iget v0, p0, Lru/noties/jlatexmath/awt/Color;->color:I
+
+    .line 2
+    .line 3
+    invoke-static {v0}, Landroid/graphics/Color;->red(I)I
+
+    .line 4
+    .line 5
+    .line 6
+    move-result v0
+
+    .line 7
+    return v0
+.end method

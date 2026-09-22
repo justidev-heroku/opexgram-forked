@@ -1,0 +1,121 @@
+.class Lorg/telegram/ui/FilteredSearchView$1;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+# interfaces
+.implements Ljava/lang/Runnable;
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Lorg/telegram/ui/FilteredSearchView;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x1
+    name = null
+.end annotation
+
+
+# instance fields
+.field final synthetic this$0:Lorg/telegram/ui/FilteredSearchView;
+
+
+# direct methods
+.method public constructor <init>(Lorg/telegram/ui/FilteredSearchView;)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lorg/telegram/ui/FilteredSearchView$1;->this$0:Lorg/telegram/ui/FilteredSearchView;
+
+    .line 2
+    .line 3
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+.end method
+
+
+# virtual methods
+.method public run()V
+    .locals 1
+
+    .line 1
+    iget-object v0, p0, Lorg/telegram/ui/FilteredSearchView$1;->this$0:Lorg/telegram/ui/FilteredSearchView;
+
+    .line 2
+    .line 3
+    invoke-static {v0}, Lorg/telegram/ui/FilteredSearchView;->access$000(Lorg/telegram/ui/FilteredSearchView;)Z
+
+    .line 4
+    .line 5
+    .line 6
+    move-result v0
+
+    .line 7
+    if-eqz v0, :cond_0
+
+    .line 8
+    .line 9
+    iget-object v0, p0, Lorg/telegram/ui/FilteredSearchView$1;->this$0:Lorg/telegram/ui/FilteredSearchView;
+
+    .line 10
+    .line 11
+    iget-object v0, v0, Lorg/telegram/ui/FilteredSearchView;->messages:Ljava/util/ArrayList;
+
+    .line 12
+    .line 13
+    invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
+
+    .line 14
+    .line 15
+    .line 16
+    iget-object v0, p0, Lorg/telegram/ui/FilteredSearchView$1;->this$0:Lorg/telegram/ui/FilteredSearchView;
+
+    .line 17
+    .line 18
+    iget-object v0, v0, Lorg/telegram/ui/FilteredSearchView;->sections:Ljava/util/ArrayList;
+
+    .line 19
+    .line 20
+    invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
+
+    .line 21
+    .line 22
+    .line 23
+    iget-object v0, p0, Lorg/telegram/ui/FilteredSearchView$1;->this$0:Lorg/telegram/ui/FilteredSearchView;
+
+    .line 24
+    .line 25
+    iget-object v0, v0, Lorg/telegram/ui/FilteredSearchView;->sectionArrays:Ljava/util/HashMap;
+
+    .line 26
+    .line 27
+    invoke-virtual {v0}, Ljava/util/HashMap;->clear()V
+
+    .line 28
+    .line 29
+    .line 30
+    iget-object v0, p0, Lorg/telegram/ui/FilteredSearchView$1;->this$0:Lorg/telegram/ui/FilteredSearchView;
+
+    .line 31
+    .line 32
+    iget-object v0, v0, Lorg/telegram/ui/FilteredSearchView;->adapter:Landroidx/recyclerview/widget/i;
+
+    .line 33
+    .line 34
+    if-eqz v0, :cond_0
+
+    .line 35
+    .line 36
+    invoke-virtual {v0}, Landroidx/recyclerview/widget/i;->notifyDataSetChanged()V
+
+    .line 37
+    .line 38
+    .line 39
+    :cond_0
+    return-void
+.end method

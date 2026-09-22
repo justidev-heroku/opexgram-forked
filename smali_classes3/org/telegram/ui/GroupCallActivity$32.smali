@@ -1,0 +1,111 @@
+.class Lorg/telegram/ui/GroupCallActivity$32;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+# interfaces
+.implements Lu4/f;
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingMethod;
+    value = Lorg/telegram/ui/GroupCallActivity;-><init>(Landroid/app/Activity;Lorg/telegram/messenger/AccountInstance;Lorg/telegram/messenger/ChatObject$Call;Lorg/telegram/tgnet/TLRPC$Chat;Lorg/telegram/tgnet/TLRPC$InputPeer;ZLjava/lang/String;)V
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x1
+    name = null
+.end annotation
+
+
+# instance fields
+.field final synthetic this$0:Lorg/telegram/ui/GroupCallActivity;
+
+
+# direct methods
+.method public constructor <init>(Lorg/telegram/ui/GroupCallActivity;)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lorg/telegram/ui/GroupCallActivity$32;->this$0:Lorg/telegram/ui/GroupCallActivity;
+
+    .line 2
+    .line 3
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+.end method
+
+
+# virtual methods
+.method public onPageScrollStateChanged(I)V
+    .locals 0
+
+    return-void
+.end method
+
+.method public onPageScrolled(IFI)V
+    .locals 0
+
+    return-void
+.end method
+
+.method public onPageSelected(I)V
+    .locals 1
+
+    .line 1
+    iget-object v0, p0, Lorg/telegram/ui/GroupCallActivity$32;->this$0:Lorg/telegram/ui/GroupCallActivity;
+
+    .line 2
+    .line 3
+    invoke-static {v0}, Lorg/telegram/ui/GroupCallActivity;->access$18700(Lorg/telegram/ui/GroupCallActivity;)Lorg/telegram/ui/Components/ProfileGalleryView;
+
+    .line 4
+    .line 5
+    .line 6
+    move-result-object v0
+
+    .line 7
+    invoke-virtual {v0, p1}, Lorg/telegram/ui/Components/ProfileGalleryView;->getRealPosition(I)I
+
+    .line 8
+    .line 9
+    .line 10
+    iget-object p1, p0, Lorg/telegram/ui/GroupCallActivity$32;->this$0:Lorg/telegram/ui/GroupCallActivity;
+
+    .line 11
+    .line 12
+    invoke-static {p1}, Lorg/telegram/ui/GroupCallActivity;->access$19100(Lorg/telegram/ui/GroupCallActivity;)Lorg/telegram/ui/AvatarPreviewPagerIndicator;
+
+    .line 13
+    .line 14
+    .line 15
+    move-result-object p1
+
+    .line 16
+    invoke-virtual {p1}, Lorg/telegram/ui/AvatarPreviewPagerIndicator;->saveCurrentPageProgress()V
+
+    .line 17
+    .line 18
+    .line 19
+    iget-object p1, p0, Lorg/telegram/ui/GroupCallActivity$32;->this$0:Lorg/telegram/ui/GroupCallActivity;
+
+    .line 20
+    .line 21
+    invoke-static {p1}, Lorg/telegram/ui/GroupCallActivity;->access$19100(Lorg/telegram/ui/GroupCallActivity;)Lorg/telegram/ui/AvatarPreviewPagerIndicator;
+
+    .line 22
+    .line 23
+    .line 24
+    move-result-object p1
+
+    .line 25
+    invoke-virtual {p1}, Landroid/view/View;->invalidate()V
+
+    .line 26
+    .line 27
+    .line 28
+    return-void
+.end method

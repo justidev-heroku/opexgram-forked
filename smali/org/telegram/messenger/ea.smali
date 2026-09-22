@@ -1,0 +1,94 @@
+.class public final synthetic Lorg/telegram/messenger/ea;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+# interfaces
+.implements Lorg/telegram/tgnet/RequestDelegate;
+
+
+# instance fields
+.field public final synthetic a:I
+
+.field public final synthetic b:Lorg/telegram/messenger/BaseController;
+
+.field public final synthetic c:I
+
+
+# direct methods
+.method public synthetic constructor <init>(Lorg/telegram/messenger/BaseController;II)V
+    .locals 0
+
+    .line 1
+    iput p3, p0, Lorg/telegram/messenger/ea;->a:I
+
+    iput-object p1, p0, Lorg/telegram/messenger/ea;->b:Lorg/telegram/messenger/BaseController;
+
+    iput p2, p0, Lorg/telegram/messenger/ea;->c:I
+
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public final run(Lorg/telegram/tgnet/TLObject;Lorg/telegram/tgnet/TLRPC$TL_error;)V
+    .locals 2
+
+    .line 1
+    iget v0, p0, Lorg/telegram/messenger/ea;->a:I
+
+    packed-switch v0, :pswitch_data_0
+
+    iget-object v0, p0, Lorg/telegram/messenger/ea;->b:Lorg/telegram/messenger/BaseController;
+
+    check-cast v0, Lorg/telegram/messenger/ContactsController;
+
+    iget v1, p0, Lorg/telegram/messenger/ea;->c:I
+
+    invoke-static {v1, v0, p1, p2}, Lorg/telegram/messenger/ContactsController;->k(ILorg/telegram/messenger/ContactsController;Lorg/telegram/tgnet/TLObject;Lorg/telegram/tgnet/TLRPC$TL_error;)V
+
+    return-void
+
+    :pswitch_0
+    iget-object v0, p0, Lorg/telegram/messenger/ea;->b:Lorg/telegram/messenger/BaseController;
+
+    check-cast v0, Lorg/telegram/messenger/MessagesController;
+
+    iget v1, p0, Lorg/telegram/messenger/ea;->c:I
+
+    invoke-static {v0, v1, p1, p2}, Lorg/telegram/messenger/MessagesController;->e0(Lorg/telegram/messenger/MessagesController;ILorg/telegram/tgnet/TLObject;Lorg/telegram/tgnet/TLRPC$TL_error;)V
+
+    return-void
+
+    :pswitch_1
+    iget-object v0, p0, Lorg/telegram/messenger/ea;->b:Lorg/telegram/messenger/BaseController;
+
+    check-cast v0, Lorg/telegram/messenger/MessagesController;
+
+    iget v1, p0, Lorg/telegram/messenger/ea;->c:I
+
+    invoke-static {v0, v1, p1, p2}, Lorg/telegram/messenger/MessagesController;->G7(Lorg/telegram/messenger/MessagesController;ILorg/telegram/tgnet/TLObject;Lorg/telegram/tgnet/TLRPC$TL_error;)V
+
+    return-void
+
+    :pswitch_2
+    iget-object v0, p0, Lorg/telegram/messenger/ea;->b:Lorg/telegram/messenger/BaseController;
+
+    check-cast v0, Lorg/telegram/messenger/MessagesController;
+
+    iget v1, p0, Lorg/telegram/messenger/ea;->c:I
+
+    invoke-static {v0, v1, p1, p2}, Lorg/telegram/messenger/MessagesController;->i8(Lorg/telegram/messenger/MessagesController;ILorg/telegram/tgnet/TLObject;Lorg/telegram/tgnet/TLRPC$TL_error;)V
+
+    return-void
+
+    nop
+
+    :pswitch_data_0
+    .packed-switch 0x0
+        :pswitch_2
+        :pswitch_1
+        :pswitch_0
+    .end packed-switch
+.end method

@@ -1,0 +1,102 @@
+.class Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Lorg/telegram/ui/Components/Paint/ShapeDetector;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x9
+    name = "Point"
+.end annotation
+
+
+# instance fields
+.field public x:D
+
+.field public y:D
+
+
+# direct methods
+.method public constructor <init>(DD)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    invoke-virtual {p0, p1, p2, p3, p4}, Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;->set(DD)V
+
+    .line 5
+    .line 6
+    .line 7
+    return-void
+.end method
+
+
+# virtual methods
+.method public distance(DD)D
+    .locals 4
+
+    .line 1
+    iget-wide v0, p0, Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;->x:D
+
+    sub-double/2addr p1, v0
+
+    const-wide/high16 v0, 0x4000000000000000L    # 2.0
+
+    invoke-static {p1, p2, v0, v1}, Ljava/lang/Math;->pow(DD)D
+
+    move-result-wide p1
+
+    iget-wide v2, p0, Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;->y:D
+
+    sub-double/2addr p3, v2
+
+    invoke-static {p3, p4, v0, v1}, Ljava/lang/Math;->pow(DD)D
+
+    move-result-wide p3
+
+    add-double/2addr p3, p1
+
+    invoke-static {p3, p4}, Ljava/lang/Math;->sqrt(D)D
+
+    move-result-wide p1
+
+    return-wide p1
+.end method
+
+.method public distance(Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;)D
+    .locals 4
+
+    .line 2
+    iget-wide v0, p1, Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;->x:D
+
+    iget-wide v2, p1, Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;->y:D
+
+    invoke-virtual {p0, v0, v1, v2, v3}, Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;->distance(DD)D
+
+    move-result-wide v0
+
+    return-wide v0
+.end method
+
+.method public set(DD)V
+    .locals 0
+
+    .line 1
+    iput-wide p1, p0, Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;->x:D
+
+    .line 2
+    .line 3
+    iput-wide p3, p0, Lorg/telegram/ui/Components/Paint/ShapeDetector$Point;->y:D
+
+    .line 4
+    .line 5
+    return-void
+.end method

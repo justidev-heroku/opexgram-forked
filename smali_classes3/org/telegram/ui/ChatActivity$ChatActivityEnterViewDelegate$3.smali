@@ -1,0 +1,116 @@
+.class Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate$3;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+# interfaces
+.implements Ljava/lang/Runnable;
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingMethod;
+    value = Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;->onTextChanged(Ljava/lang/CharSequence;ZZ)V
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x1
+    name = null
+.end annotation
+
+
+# instance fields
+.field final synthetic this$1:Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;
+
+.field final synthetic val$text:Ljava/lang/CharSequence;
+
+
+# direct methods
+.method public constructor <init>(Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;Ljava/lang/CharSequence;)V
+    .locals 0
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "()V"
+        }
+    .end annotation
+
+    .line 1
+    iput-object p1, p0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate$3;->this$1:Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;
+
+    .line 2
+    .line 3
+    iput-object p2, p0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate$3;->val$text:Ljava/lang/CharSequence;
+
+    .line 4
+    .line 5
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 6
+    .line 7
+    .line 8
+    return-void
+.end method
+
+
+# virtual methods
+.method public run()V
+    .locals 3
+
+    .line 1
+    iget-object v0, p0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate$3;->this$1:Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;
+
+    .line 2
+    .line 3
+    iget-object v0, v0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;->this$0:Lorg/telegram/ui/ChatActivity;
+
+    .line 4
+    .line 5
+    invoke-static {v0}, Lorg/telegram/ui/ChatActivity;->access$6000(Lorg/telegram/ui/ChatActivity;)Ljava/lang/Runnable;
+
+    .line 6
+    .line 7
+    .line 8
+    move-result-object v0
+
+    .line 9
+    if-ne p0, v0, :cond_0
+
+    .line 10
+    .line 11
+    iget-object v0, p0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate$3;->this$1:Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;
+
+    .line 12
+    .line 13
+    iget-object v0, v0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;->this$0:Lorg/telegram/ui/ChatActivity;
+
+    .line 14
+    .line 15
+    iget-object v1, p0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate$3;->val$text:Ljava/lang/CharSequence;
+
+    .line 16
+    .line 17
+    const/4 v2, 0x0
+
+    .line 18
+    invoke-virtual {v0, v1, v2}, Lorg/telegram/ui/ChatActivity;->searchLinks(Ljava/lang/CharSequence;Z)V
+
+    .line 19
+    .line 20
+    .line 21
+    iget-object v0, p0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate$3;->this$1:Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;
+
+    .line 22
+    .line 23
+    iget-object v0, v0, Lorg/telegram/ui/ChatActivity$ChatActivityEnterViewDelegate;->this$0:Lorg/telegram/ui/ChatActivity;
+
+    .line 24
+    .line 25
+    const/4 v1, 0x0
+
+    .line 26
+    invoke-static {v0, v1}, Lorg/telegram/ui/ChatActivity;->access$6002(Lorg/telegram/ui/ChatActivity;Ljava/lang/Runnable;)Ljava/lang/Runnable;
+
+    .line 27
+    .line 28
+    .line 29
+    :cond_0
+    return-void
+.end method

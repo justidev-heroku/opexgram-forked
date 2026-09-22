@@ -1,0 +1,264 @@
+.class public Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;
+.super Lorg/telegram/tgnet/TLObject;
+.source "SourceFile"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Lorg/telegram/tgnet/tl/TL_stars;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x9
+    name = "Tl_starsRating"
+.end annotation
+
+
+# static fields
+.field public static final constructor:I = 0x1b0e4f07
+
+
+# instance fields
+.field public current_level_stars:J
+
+.field public flags:I
+
+.field public level:I
+
+.field public next_level_stars:J
+
+.field public stars:J
+
+
+# direct methods
+.method public constructor <init>()V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Lorg/telegram/tgnet/TLObject;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    return-void
+.end method
+
+.method public static TLdeserialize(Lorg/telegram/tgnet/InputSerializedData;IZ)Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;
+    .locals 2
+
+    .line 1
+    const v0, 0x1b0e4f07
+
+    .line 2
+    .line 3
+    .line 4
+    if-eq v0, p1, :cond_0
+
+    .line 5
+    .line 6
+    const/4 v0, 0x0
+
+    .line 7
+    goto :goto_0
+
+    .line 8
+    :cond_0
+    new-instance v0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;
+
+    .line 9
+    .line 10
+    invoke-direct {v0}, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;-><init>()V
+
+    .line 11
+    .line 12
+    .line 13
+    :goto_0
+    const-class v1, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;
+
+    .line 14
+    .line 15
+    invoke-static {v1, v0, p0, p1, p2}, Lorg/telegram/tgnet/TLObject;->TLdeserialize(Ljava/lang/Class;Lorg/telegram/tgnet/TLObject;Lorg/telegram/tgnet/InputSerializedData;IZ)Lorg/telegram/tgnet/TLObject;
+
+    .line 16
+    .line 17
+    .line 18
+    move-result-object p0
+
+    .line 19
+    check-cast p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;
+
+    .line 20
+    .line 21
+    return-object p0
+.end method
+
+
+# virtual methods
+.method public readParams(Lorg/telegram/tgnet/InputSerializedData;Z)V
+    .locals 2
+
+    .line 1
+    invoke-interface {p1, p2}, Lorg/telegram/tgnet/InputSerializedData;->readInt32(Z)I
+
+    .line 2
+    .line 3
+    .line 4
+    move-result v0
+
+    .line 5
+    iput v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->flags:I
+
+    .line 6
+    .line 7
+    invoke-interface {p1, p2}, Lorg/telegram/tgnet/InputSerializedData;->readInt32(Z)I
+
+    .line 8
+    .line 9
+    .line 10
+    move-result v0
+
+    .line 11
+    iput v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->level:I
+
+    .line 12
+    .line 13
+    invoke-interface {p1, p2}, Lorg/telegram/tgnet/InputSerializedData;->readInt64(Z)J
+
+    .line 14
+    .line 15
+    .line 16
+    move-result-wide v0
+
+    .line 17
+    iput-wide v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->current_level_stars:J
+
+    .line 18
+    .line 19
+    invoke-interface {p1, p2}, Lorg/telegram/tgnet/InputSerializedData;->readInt64(Z)J
+
+    .line 20
+    .line 21
+    .line 22
+    move-result-wide v0
+
+    .line 23
+    iput-wide v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->stars:J
+
+    .line 24
+    .line 25
+    iget v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->flags:I
+
+    .line 26
+    .line 27
+    const/4 v1, 0x1
+
+    .line 28
+    invoke-static {v0, v1}, Lorg/telegram/tgnet/TLObject;->hasFlag(II)Z
+
+    .line 29
+    .line 30
+    .line 31
+    move-result v0
+
+    .line 32
+    if-eqz v0, :cond_0
+
+    .line 33
+    .line 34
+    invoke-interface {p1, p2}, Lorg/telegram/tgnet/InputSerializedData;->readInt64(Z)J
+
+    .line 35
+    .line 36
+    .line 37
+    move-result-wide p1
+
+    .line 38
+    iput-wide p1, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->next_level_stars:J
+
+    .line 39
+    .line 40
+    :cond_0
+    return-void
+.end method
+
+.method public serializeToStream(Lorg/telegram/tgnet/OutputSerializedData;)V
+    .locals 2
+
+    .line 1
+    const v0, 0x1b0e4f07
+
+    .line 2
+    .line 3
+    .line 4
+    invoke-interface {p1, v0}, Lorg/telegram/tgnet/OutputSerializedData;->writeInt32(I)V
+
+    .line 5
+    .line 6
+    .line 7
+    iget v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->flags:I
+
+    .line 8
+    .line 9
+    invoke-interface {p1, v0}, Lorg/telegram/tgnet/OutputSerializedData;->writeInt32(I)V
+
+    .line 10
+    .line 11
+    .line 12
+    iget v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->level:I
+
+    .line 13
+    .line 14
+    invoke-interface {p1, v0}, Lorg/telegram/tgnet/OutputSerializedData;->writeInt32(I)V
+
+    .line 15
+    .line 16
+    .line 17
+    iget-wide v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->current_level_stars:J
+
+    .line 18
+    .line 19
+    invoke-interface {p1, v0, v1}, Lorg/telegram/tgnet/OutputSerializedData;->writeInt64(J)V
+
+    .line 20
+    .line 21
+    .line 22
+    iget-wide v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->stars:J
+
+    .line 23
+    .line 24
+    invoke-interface {p1, v0, v1}, Lorg/telegram/tgnet/OutputSerializedData;->writeInt64(J)V
+
+    .line 25
+    .line 26
+    .line 27
+    iget v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->flags:I
+
+    .line 28
+    .line 29
+    const/4 v1, 0x1
+
+    .line 30
+    invoke-static {v0, v1}, Lorg/telegram/tgnet/TLObject;->hasFlag(II)Z
+
+    .line 31
+    .line 32
+    .line 33
+    move-result v0
+
+    .line 34
+    if-eqz v0, :cond_0
+
+    .line 35
+    .line 36
+    iget-wide v0, p0, Lorg/telegram/tgnet/tl/TL_stars$Tl_starsRating;->next_level_stars:J
+
+    .line 37
+    .line 38
+    invoke-interface {p1, v0, v1}, Lorg/telegram/tgnet/OutputSerializedData;->writeInt64(J)V
+
+    .line 39
+    .line 40
+    .line 41
+    :cond_0
+    return-void
+.end method

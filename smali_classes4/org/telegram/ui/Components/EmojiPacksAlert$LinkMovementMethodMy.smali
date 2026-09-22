@@ -1,0 +1,117 @@
+.class Lorg/telegram/ui/Components/EmojiPacksAlert$LinkMovementMethodMy;
+.super Landroid/text/method/LinkMovementMethod;
+.source "SourceFile"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Lorg/telegram/ui/Components/EmojiPacksAlert;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x9
+    name = "LinkMovementMethodMy"
+.end annotation
+
+
+# direct methods
+.method private constructor <init>()V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Landroid/text/method/LinkMovementMethod;-><init>()V
+
+    return-void
+.end method
+
+.method public synthetic constructor <init>(Lorg/telegram/ui/Components/EmojiPacksAlert$1;)V
+    .locals 0
+
+    .line 2
+    invoke-direct {p0}, Lorg/telegram/ui/Components/EmojiPacksAlert$LinkMovementMethodMy;-><init>()V
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public onTouchEvent(Landroid/widget/TextView;Landroid/text/Spannable;Landroid/view/MotionEvent;)Z
+    .locals 2
+
+    .line 1
+    :try_start_0
+    invoke-super {p0, p1, p2, p3}, Landroid/text/method/LinkMovementMethod;->onTouchEvent(Landroid/widget/TextView;Landroid/text/Spannable;Landroid/view/MotionEvent;)Z
+
+    .line 2
+    .line 3
+    .line 4
+    move-result p1
+
+    .line 5
+    invoke-virtual {p3}, Landroid/view/MotionEvent;->getAction()I
+
+    .line 6
+    .line 7
+    .line 8
+    move-result v0
+
+    .line 9
+    const/4 v1, 0x1
+
+    .line 10
+    if-eq v0, v1, :cond_1
+
+    .line 11
+    .line 12
+    invoke-virtual {p3}, Landroid/view/MotionEvent;->getAction()I
+
+    .line 13
+    .line 14
+    .line 15
+    move-result p3
+
+    .line 16
+    const/4 v0, 0x3
+
+    .line 17
+    if-ne p3, v0, :cond_0
+
+    .line 18
+    .line 19
+    goto :goto_0
+
+    .line 20
+    :cond_0
+    return p1
+
+    .line 21
+    :catch_0
+    move-exception p1
+
+    .line 22
+    goto :goto_1
+
+    .line 23
+    :cond_1
+    :goto_0
+    invoke-static {p2}, Landroid/text/Selection;->removeSelection(Landroid/text/Spannable;)V
+    :try_end_0
+    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
+
+    .line 24
+    .line 25
+    .line 26
+    return p1
+
+    .line 27
+    :goto_1
+    invoke-static {p1}, Lorg/telegram/messenger/FileLog;->e(Ljava/lang/Throwable;)V
+
+    .line 28
+    .line 29
+    .line 30
+    const/4 p1, 0x0
+
+    .line 31
+    return p1
+.end method

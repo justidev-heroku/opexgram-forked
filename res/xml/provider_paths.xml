@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-path name="media" path="." />
+    <files-path name="logs" path="/logs/" />
+    <files-path name="cache" path="/cache/" />
+    <cache-path name="quote_cache" path="quote/" />
+    <cache-path name="clipboard_cache" path="clipboard/" />
+    <cache-path name="settings_backup" path="backup/" />
+    <root-path name="external_files" path="/storage/" />
+</paths>

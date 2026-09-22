@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="abc_action_bar_default_height_material">48.0dp</dimen>
+    <dimen name="mr_controller_volume_group_list_item_height">61.0dp</dimen>
+    <dimen name="mr_controller_volume_group_list_item_icon_size">18.0dp</dimen>
+    <dimen name="mr_controller_volume_group_list_max_height">132.0dp</dimen>
+</resources>

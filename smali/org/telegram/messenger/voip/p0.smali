@@ -1,0 +1,36 @@
+.class public final synthetic Lorg/telegram/messenger/voip/p0;
+.super Ljava/lang/Object;
+.source "SourceFile"
+
+# interfaces
+.implements Landroid/content/DialogInterface$OnClickListener;
+
+
+# instance fields
+.field public final synthetic a:Lorg/telegram/messenger/voip/VoIPService;
+
+
+# direct methods
+.method public synthetic constructor <init>(Lorg/telegram/messenger/voip/VoIPService;)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    iput-object p1, p0, Lorg/telegram/messenger/voip/p0;->a:Lorg/telegram/messenger/voip/VoIPService;
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public final onClick(Landroid/content/DialogInterface;I)V
+    .locals 1
+
+    .line 1
+    iget-object v0, p0, Lorg/telegram/messenger/voip/p0;->a:Lorg/telegram/messenger/voip/VoIPService;
+
+    invoke-static {v0, p1, p2}, Lorg/telegram/messenger/voip/VoIPService;->D0(Lorg/telegram/messenger/voip/VoIPService;Landroid/content/DialogInterface;I)V
+
+    return-void
+.end method
