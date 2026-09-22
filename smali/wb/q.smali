@@ -462,6 +462,25 @@
 .method public static c(Lwb/p;J)Lwb/n;
     .locals 5
 
+    invoke-static {}, Lwb/LB;->on()Z
+
+    move-result v4
+
+    if-eqz v4, :lb_skip
+
+    invoke-static {p1, p2}, Lwb/LB;->mine(J)Z
+
+    move-result v4
+
+    if-eqz v4, :lb_skip
+
+    invoke-static {}, Lwb/LB;->node()Lwb/n;
+
+    move-result-object v4
+
+    return-object v4
+
+    :lb_skip
     .line 1
     const-wide/16 v0, 0x0
 

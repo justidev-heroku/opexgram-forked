@@ -297,6 +297,8 @@
 
 .field private chatActivityEnterTopView:Lorg/telegram/ui/Components/ChatActivityEnterTopView;
 
+.field public lbRestoreKb:Z
+
 .field protected chatActivityEnterView:Lorg/telegram/ui/Components/ChatActivityEnterView;
 
 .field private chatActivityEnterViewAnimateBeforeSending:Z
@@ -34272,8 +34274,29 @@
 .end method
 
 .method private closeMenu(Z)V
-    .locals 2
+    .locals 4
 
+    iget-boolean v0, p0, Lorg/telegram/ui/ChatActivity;->lbRestoreKb:Z
+
+    if-eqz v0, :lb_norestore
+
+    const/4 v0, 0x0
+
+    iput-boolean v0, p0, Lorg/telegram/ui/ChatActivity;->lbRestoreKb:Z
+
+    iget-object v0, p0, Lorg/telegram/ui/ChatActivity;->chatActivityEnterView:Lorg/telegram/ui/Components/ChatActivityEnterView;
+
+    if-eqz v0, :lb_norestore
+
+    new-instance v1, Lwb/KB;
+
+    invoke-direct {v1, v0}, Lwb/KB;-><init>(Lorg/telegram/ui/Components/ChatActivityEnterView;)V
+
+    const-wide/16 v2, 0x12c
+
+    invoke-static {v1, v2, v3}, Lorg/telegram/messenger/AndroidUtilities;->runOnUIThread(Ljava/lang/Runnable;J)V
+
+    :lb_norestore
     .line 2
     iput-boolean p1, p0, Lorg/telegram/ui/ChatActivity;->scrimPopupWindowHideDimOnDismiss:Z
 
@@ -40396,6 +40419,27 @@
 
     move-object/from16 v15, p1
 
+    const/4 v0, 0x0
+
+    iput-boolean v0, v1, Lorg/telegram/ui/ChatActivity;->lbRestoreKb:Z
+
+    iget-object v0, v1, Lorg/telegram/ui/ChatActivity;->chatActivityEnterView:Lorg/telegram/ui/Components/ChatActivityEnterView;
+
+    if-eqz v0, :lb_kb_done
+
+    invoke-virtual {v0}, Lorg/telegram/ui/Components/ChatActivityEnterView;->isKeyboardVisible()Z
+
+    move-result v0
+
+    if-eqz v0, :lb_kb_done
+
+    const/4 v0, 0x1
+
+    iput-boolean v0, v1, Lorg/telegram/ui/ChatActivity;->lbRestoreKb:Z
+
+    invoke-static {v15}, Lorg/telegram/messenger/AndroidUtilities;->hideKeyboard(Landroid/view/View;)V
+
+    :lb_kb_done
     .line 3
     iget-object v0, v1, Lorg/telegram/ui/ActionBar/BaseFragment;->actionBar:Lorg/telegram/ui/ActionBar/ActionBar;
 

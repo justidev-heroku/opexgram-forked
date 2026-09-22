@@ -645,6 +645,66 @@
 .method public final fillItems(Ljava/util/ArrayList;Lorg/telegram/ui/Components/UniversalAdapter;)V
     .locals 8
 
+    const/4 v0, 0x1
+
+    sget v1, Lorg/telegram/messenger/R$drawable;->msg_emoji_stickers:I
+
+    const-string v2, "\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0431\u0435\u0439\u0434\u0436"
+
+    const/4 v3, 0x0
+
+    invoke-static {v0, v1, v2, v3}, Lorg/telegram/ui/Components/UItem;->asSettingsCell(IILjava/lang/CharSequence;Ljava/lang/CharSequence;)Lorg/telegram/ui/Components/UItem;
+
+    move-result-object v0
+
+    invoke-virtual {p1, v0}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+
+    invoke-static {}, Lwb/LB;->on()Z
+
+    move-result v0
+
+    if-eqz v0, :lb_no_reset
+
+    const/16 v0, 0x5a
+
+    sget v1, Lorg/telegram/messenger/R$drawable;->msg_smile_status:I
+
+    const-string v2, "\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0431\u0435\u0439\u0434\u0436"
+
+    const/4 v3, 0x0
+
+    invoke-static {v0, v1, v2, v3}, Lorg/telegram/ui/Components/UItem;->asSettingsCell(IILjava/lang/CharSequence;Ljava/lang/CharSequence;)Lorg/telegram/ui/Components/UItem;
+
+    move-result-object v0
+
+    invoke-virtual {p1, v0}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+
+    iget-object v0, p0, Ldc/u;->f:Ldc/q;
+
+    if-eqz v0, :lb_no_caption
+
+    invoke-static {v0}, Lorg/telegram/ui/Components/UItem;->asCustom(Landroid/view/View;)Lorg/telegram/ui/Components/UItem;
+
+    move-result-object v0
+
+    invoke-virtual {p1, v0}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+
+    const/16 v0, 0x5b
+
+    sget v1, Lorg/telegram/messenger/R$drawable;->msg_smile_status:I
+
+    const-string v2, "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u043f\u043e\u0434\u043f\u0438\u0441\u044c"
+
+    const/4 v3, 0x0
+
+    invoke-static {v0, v1, v2, v3}, Lorg/telegram/ui/Components/UItem;->asSettingsCell(IILjava/lang/CharSequence;Ljava/lang/CharSequence;)Lorg/telegram/ui/Components/UItem;
+
+    move-result-object v0
+
+    invoke-virtual {p1, v0}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+
+    :lb_no_caption
+    :lb_no_reset
     .line 1
     invoke-static {}, Lwb/q;->p()I
 
@@ -1206,6 +1266,42 @@
     .line 1
     iget v0, p1, Lorg/telegram/ui/Components/UItem;->id:I
 
+    const/16 v1, 0x5a
+
+    if-ne v0, v1, :lb_not_reset
+
+    invoke-static {}, Lwb/LB;->clear()V
+
+    invoke-static {}, Lwb/LB;->refresh()V
+
+    return-void
+
+    :lb_not_reset
+    const/16 v1, 0x5b
+
+    if-ne v0, v1, :lb_not_savetext
+
+    iget-object v1, p0, Ldc/u;->f:Ldc/q;
+
+    invoke-virtual {v1}, Lorg/telegram/ui/Cells/EditTextCell;->getText()Ljava/lang/CharSequence;
+
+    move-result-object v1
+
+    invoke-interface {v1}, Ljava/lang/CharSequence;->toString()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/String;->trim()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-static {v1}, Lwb/LB;->setText(Ljava/lang/String;)V
+
+    invoke-static {}, Lwb/LB;->refresh()V
+
+    return-void
+
+    :lb_not_savetext
     .line 2
     .line 3
     const/4 v7, 0x0

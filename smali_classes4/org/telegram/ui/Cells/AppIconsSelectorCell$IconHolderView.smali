@@ -428,6 +428,19 @@
     .line 96
     .line 97
     :goto_0
+    iget v0, p1, Lorg/telegram/ui/LauncherIconController$LauncherIcon;->title:I
+
+    const v1, 0x7f0ffcfc
+
+    if-ne v0, v1, :lb_skiptitle
+
+    iget-object v0, p0, Lorg/telegram/ui/Cells/AppIconsSelectorCell$IconHolderView;->titleView:Landroid/widget/TextView;
+
+    const-string v1, "\u0411\u0438\u0433 \u0411\u043e\u0431"
+
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+
+    :lb_skiptitle
     invoke-static {p1}, Lorg/telegram/ui/LauncherIconController;->isEnabled(Lorg/telegram/ui/LauncherIconController$LauncherIcon;)Z
 
     .line 98
