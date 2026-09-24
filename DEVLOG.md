@@ -45,3 +45,9 @@
 ## 2026-09-22 — форк НОВОГО билда opexgram-12.10.3-beta7.apk
 - Новый билд той же версии (versionCode 70899), но иная обфускация: фрагмент бейджа dc/v→dc/u, пикер dc/t→dc/s, EditText dc/r→dc/q. wb/q, ChatActivity, IconHolderView, LB, KB — идентичны.
 - Переналожены ВСЕ патчи на opex2 (скрипт reapply.py, каждая замена по 1 совпадению): c()-хук, IconHolderView «Биг Боб», ChatActivity поле+createMenu+closeMenu, dc/s onEmojiSelected, dc/u fillItems+onClick (с Ldc/u;->f:Ldc/q;), иконка icon_6 скруглена. Тесты 17/17 (пути dc/u,dc/s).
+
+## 2026-09-24 — Фаза 0: каркас сборки (движок хуков, roadmap)
+- Цель проекта: перенос движка хуков exteraGram (LSPlant+ShadowHook, Xposed API, плагины + Python/Chaquopy) в форк opexgram 12.10.3-beta7 через режим `default` + собственный libexterahook.so. Референс залит в ref/exteragram (декод 12.10.1).
+- tools/build.sh: воспроизводимая сборка apktool b → zipalign → условная подпись (apksigner ключом signing/bob.keystore, читает KS_PASS/KEY_ALIAS/KEY_PASS из окружения; если не заданы — SIGN SKIPPED, отдаёт unsigned+aligned).
+- Проверено: сборка форка «как есть» проходит, APK 67 МБ, все 5 dex (classes..classes5), package com.opexgram.messenger vc70899. build/ уже в .gitignore.
+- Подпись и снятие skip с test_apk_signed_and_package отложены до появления секретов окружения.
