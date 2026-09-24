@@ -1,0 +1,14 @@
+version: 3.0.3
+apkFileName: exteraGram-full-beta-universal-20260831.apk
+sdkInfo:
+  minSdkVersion: 25
+doNotCompress:
+- arsc
+- imy
+- jpg
+- mp3
+- png
+- wav
+- webp
+- assets/dexopt/baseline.prof
+- assets/dexopt/baseline.profm
