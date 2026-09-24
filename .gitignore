@@ -5,3 +5,4 @@ __pycache__/
 *.keystore
 *.jks
 signing/
+out/

@@ -45,3 +45,9 @@
 ## 2026-09-22 — форк НОВОГО билда opexgram-12.10.3-beta7.apk
 - Новый билд той же версии (versionCode 70899), но иная обфускация: фрагмент бейджа dc/v→dc/u, пикер dc/t→dc/s, EditText dc/r→dc/q. wb/q, ChatActivity, IconHolderView, LB, KB — идентичны.
 - Переналожены ВСЕ патчи на opex2 (скрипт reapply.py, каждая замена по 1 совпадению): c()-хук, IconHolderView «Биг Боб», ChatActivity поле+createMenu+closeMenu, dc/s onEmojiSelected, dc/u fillItems+onClick (с Ldc/u;->f:Ldc/q;), иконка icon_6 скруглена. Тесты 17/17 (пути dc/u,dc/s).
+
+## 2026-09-24 — плагины exteraGram, фаза 1: libexterahook.so
+- Реверс: движок хуков exteraGram = LSPlant + ShadowHook внутри их libtmessages, JNI через RegisterNatives на `dev/exterahook/runtime/bridge/JniBridgeBindings` (10 методов). Java `HookBridgeProvider` умеет режим default = отдельная `libexterahook.so` → наш libtmessages не трогаем.
+- `native/exterahook/`: своя обёртка (`src/exterahook.cpp`), LSPlant v6.4 + ShadowHook v2.0.1 сабмодулями (статически), ElfImg (LSPosed) для prefix-поиска символов libart. NDK r29, android-21, c++_static.
+- `lib/{arm64-v8a,armeabi-v7a}/`: `libexterahook.so` + `libshadowhook_nothing.so` (ShadowHook dlopen'ит её при init — без неё init падает). Экспорт только JNI_OnLoad, NEEDED только системные (log/z/m/dl/c), arm64 выровнен на 16К.
+- `tests/test_exterahook_so.py` (11): экспорт, NEEDED, имена/сигнатуры vs smali exteraGram, nothing.so, выравнивание, архитектура. Всего 28/28. На устройстве ещё не проверено (Java-часть плагинов не перенесена).

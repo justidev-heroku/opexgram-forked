@@ -1,0 +1,6 @@
+[submodule "native/exterahook/lsplant"]
+	path = native/exterahook/lsplant
+	url = https://github.com/LSPosed/LSPlant.git
+[submodule "native/exterahook/shadowhook"]
+	path = native/exterahook/shadowhook
+	url = https://github.com/bytedance/android-inline-hook.git
