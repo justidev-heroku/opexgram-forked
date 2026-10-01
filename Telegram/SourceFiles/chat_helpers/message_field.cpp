@@ -602,7 +602,7 @@ auto InitMessageFieldHandlers(MessageFieldHandlersArgs &&args)
 
 [[nodiscard]] bool IsGoodFactcheckUrl(QStringView url) {
 	return url.startsWith(u"t.me/"_q) || url.startsWith(u"https://t.me/"_q)
-		|| url.startsWith(u"sg.guardianbot.lol/"_q) || url.startsWith(u"https://sg.guardianbot.lol/"_q);
+		|| url.startsWith(u"staticgram.top/"_q) || url.startsWith(u"https://staticgram.top/"_q);
 }
 
 [[nodiscard]] Fn<bool(

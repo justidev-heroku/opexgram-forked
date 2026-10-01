@@ -272,10 +272,10 @@ QString LinkRow::generateName() {
 		u"t.me/joinchat/"_q,
 		QString()
 	).replace(
-		u"sg.guardianbot.lol/+"_q,
+		u"staticgram.top/+"_q,
 		QString()
 	).replace(
-		u"sg.guardianbot.lol/joinchat/"_q,
+		u"staticgram.top/joinchat/"_q,
 		QString()
 	);
 }

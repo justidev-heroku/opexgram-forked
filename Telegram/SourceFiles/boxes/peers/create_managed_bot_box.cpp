@@ -267,7 +267,7 @@ void CreateManagedBotBox(
 		const auto text = tr::lng_create_bot_username_link(
 			tr::now,
 			lt_link,
-			u"sg.guardianbot.lol/"_q + full);
+			u"staticgram.top/"_q + full);
 		state->errorText = QString();
 		state->goodText = text;
 		statusLabel->setText(text);

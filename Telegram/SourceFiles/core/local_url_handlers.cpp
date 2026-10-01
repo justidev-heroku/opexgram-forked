@@ -1948,7 +1948,7 @@ QString TryConvertUrlToLocal(QString url) {
 		const auto protocol = tonsiteMatch->captured(1);
 		return u"tonsite://"_q + url.mid(protocol.size());
 	}
-	auto subdomainMatch = regex_match(u"^(https?://)?([a-zA-Z0-9\\_]+)\\.(?:t\\.me|sg\\.guardianbot\\.lol)(/\\d+)?/?(\\?.+)?"_q, url, matchOptions);
+	auto subdomainMatch = regex_match(u"^(https?://)?([a-zA-Z0-9\\_]+)\\.(?:t\\.me)(/\\d+)?/?(\\?.+)?"_q, url, matchOptions);
 	if (subdomainMatch) {
 		const auto name = subdomainMatch->captured(2);
 		if (name.size() > 1 && name != "www") {
@@ -1963,7 +1963,7 @@ QString TryConvertUrlToLocal(QString url) {
 				: url;
 		}
 	}
-	auto telegramMeMatch = regex_match(u"^(https?://)?(www\\.)?(telegram\\.(me|dog)|t\\.me|sg\\.guardianbot\\.lol)/(.+)$"_q, url, matchOptions);
+	auto telegramMeMatch = regex_match(u"^(https?://)?(www\\.)?(telegram\\.(me|dog)|t\\.me|staticgram\\.top)/(.+)$"_q, url, matchOptions);
 	if (telegramMeMatch) {
 		const auto query = telegramMeMatch->capturedView(5);
 		if (const auto phoneMatch = regex_match(u"^\\+([0-9]+)(\\?|$)"_q, query, matchOptions)) {
