@@ -1934,6 +1934,13 @@ QString TryConvertUrlToLocal(QString url) {
 
 	using namespace qthelp;
 	auto matchOptions = RegExOption::CaseInsensitive;
+	// StaticGram: our scheme is sg://. Links generated as tg:// (bots, other
+	// clients) belong to our network too and must not leave for Telegram.
+	if (url.startsWith(u"tg://"_q, Qt::CaseInsensitive)) {
+		return u"sg://"_q + url.mid(5);
+	} else if (url.startsWith(u"tg:"_q, Qt::CaseInsensitive)) {
+		return u"sg://"_q + url.mid(3);
+	}
 	auto tonsiteMatch = (url.indexOf(u".ton") >= 0)
 		? regex_match(u"^(https?://)?[^/@:]+\\.ton($|/)"_q, url, matchOptions)
 		: RegularExpressionMatch(QRegularExpressionMatch());
@@ -1941,7 +1948,7 @@ QString TryConvertUrlToLocal(QString url) {
 		const auto protocol = tonsiteMatch->captured(1);
 		return u"tonsite://"_q + url.mid(protocol.size());
 	}
-	auto subdomainMatch = regex_match(u"^(https?://)?([a-zA-Z0-9\\_]+)\\.(?:t\\.me|sgq\\.me)(/\\d+)?/?(\\?.+)?"_q, url, matchOptions);
+	auto subdomainMatch = regex_match(u"^(https?://)?([a-zA-Z0-9\\_]+)\\.(?:t\\.me|sg\\.guardianbot\\.lol)(/\\d+)?/?(\\?.+)?"_q, url, matchOptions);
 	if (subdomainMatch) {
 		const auto name = subdomainMatch->captured(2);
 		if (name.size() > 1 && name != "www") {
@@ -1956,7 +1963,7 @@ QString TryConvertUrlToLocal(QString url) {
 				: url;
 		}
 	}
-	auto telegramMeMatch = regex_match(u"^(https?://)?(www\\.)?(telegram\\.(me|dog)|t\\.me|sgq\\.me)/(.+)$"_q, url, matchOptions);
+	auto telegramMeMatch = regex_match(u"^(https?://)?(www\\.)?(telegram\\.(me|dog)|t\\.me|sg\\.guardianbot\\.lol)/(.+)$"_q, url, matchOptions);
 	if (telegramMeMatch) {
 		const auto query = telegramMeMatch->capturedView(5);
 		if (const auto phoneMatch = regex_match(u"^\\+([0-9]+)(\\?|$)"_q, query, matchOptions)) {

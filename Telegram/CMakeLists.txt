@@ -2256,7 +2256,7 @@ if (APPLE AND NOT build_macstore)
 endif()
 
 if (WIN32)
-    # ShuzaGram: rename the produced binary to StaticGram.exe without
+    # StaticGram: rename the produced binary to StaticGram.exe without
     # touching the CMake target name "Telegram" used throughout this file.
     set_target_properties(Telegram PROPERTIES OUTPUT_NAME "StaticGram")
 

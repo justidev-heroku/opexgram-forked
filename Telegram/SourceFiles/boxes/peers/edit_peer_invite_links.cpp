@@ -305,10 +305,10 @@ QString Row::generateName() {
 		u"t.me/joinchat/"_q,
 		QString()
 	).replace(
-		u"sgq.me/+"_q,
+		u"sg.guardianbot.lol/+"_q,
 		QString()
 	).replace(
-		u"sgq.me/joinchat/"_q,
+		u"sg.guardianbot.lol/joinchat/"_q,
 		QString()
 	);
 }

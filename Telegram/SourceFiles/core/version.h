@@ -18,7 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #endif // TDESKTOP_ALLOW_CLOSED_ALPHA
 
 // used in Updater.cpp and Setup.iss for Windows
-// ShuzaGram: freshly generated GUID (not upstream's) so this installer
+// StaticGram: freshly generated GUID (not upstream's) so this installer
 // never collides with a real Telegram Desktop install on the same machine
 // (registry keys, updater mutex, uninstall entry all key off this).
 constexpr auto AppId = "{2CAB6458-34FE-4FEC-A5F6-238ED753133D}"_cs;

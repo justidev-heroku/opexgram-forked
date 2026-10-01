@@ -20,7 +20,7 @@ if (MSVC AND CMAKE_GENERATOR MATCHES "^Visual Studio ")
         ${CMAKE_CURRENT_LIST_DIR}/td_iv_msvc_warning_suppressions.props)
 endif()
 
-# ShuzaGram: the .props import above only reaches the "Visual Studio" CMake
+# StaticGram: the .props import above only reaches the "Visual Studio" CMake
 # generator -- Ninja/Ninja Multi-Config builds never see it, so a newer MSVC
 # toolset (here: warning C5038 from bundled MicroTeX, member init order)
 # turns into a hard error under /WX with nothing to silence it.

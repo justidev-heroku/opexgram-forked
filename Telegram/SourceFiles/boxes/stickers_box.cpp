@@ -2189,11 +2189,11 @@ void StickersBox::Inner::AddressField::correctValue(
 		u"www.t.me/"_q,
 		u"www.telegram.me/"_q,
 		u"www.telegram.dog/"_q,
-		u"www.sgq.me/"_q,
+		u"www.sg.guardianbot.lol/"_q,
 		u"t.me/"_q,
 		u"telegram.me/"_q,
 		u"telegram.dog/"_q,
-		u"sgq.me/"_q,
+		u"sg.guardianbot.lol/"_q,
 		u"addstickers/"_q,
 	};
 	for (auto &removePhrase : removeFromBeginning) {

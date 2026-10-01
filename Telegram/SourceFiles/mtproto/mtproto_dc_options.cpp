@@ -29,7 +29,7 @@ struct BuiltInDc {
 	int port;
 };
 
-// ShuzaGram runs a single, self-hosted MTProto server (gramsrv), not the
+// StaticGram runs a single, self-hosted MTProto server (gramsrv), not the
 // real multi-DC Telegram backend. Every dc_id below points at the same
 // server, whose IP is resolved from this domain at startup via DNS instead
 // of any literal address baked into the build -- the server can move to a
@@ -37,20 +37,20 @@ struct BuiltInDc {
 // IP: if DNS fails, no endpoint is added for that dc rather than silently
 // pinning an old IP that could be wrong or gone; the next DcOptions rebuild
 // (network change, reconnect, restart) retries the lookup.
-constexpr auto kShuzaGramServerHost = "13.143.160.46";
-constexpr auto kShuzaGramServerPort = 2398;
+constexpr auto kStaticGramServerHost = "13.143.160.46";
+constexpr auto kStaticGramServerPort = 2398;
 
 // Empty string means DNS resolution failed.
-[[nodiscard]] std::string ResolveShuzaGramServerIp() {
+[[nodiscard]] std::string ResolveStaticGramServerIp() {
 	const auto info = QHostInfo::fromName(
-		QString::fromLatin1(kShuzaGramServerHost));
+		QString::fromLatin1(kStaticGramServerHost));
 	for (const auto &address : info.addresses()) {
 		if (address.protocol() == QAbstractSocket::IPv4Protocol) {
 			return address.toString().toStdString();
 		}
 	}
 	LOG(("MTP Warning: DNS lookup of %1 failed (%2)."
-		).arg(kShuzaGramServerHost
+		).arg(kStaticGramServerHost
 		).arg(info.errorString()));
 	return {};
 }
@@ -69,7 +69,7 @@ const BuiltInDc kBuiltInDcsTest[] = {
 	{ 3, "", 0 },
 };
 
-// ShuzaGram: no separate IPv4/IPv6 topology for a single self-hosted server.
+// StaticGram: no separate IPv4/IPv6 topology for a single self-hosted server.
 
 const char *kTestPublicRSAKeys[] = { "\
 -----BEGIN RSA PUBLIC KEY-----\n\
@@ -183,7 +183,7 @@ void DcOptions::constructFromBuiltIn() {
 
 	readBuiltInPublicKeys();
 
-	const auto serverIp = ResolveShuzaGramServerIp();
+	const auto serverIp = ResolveStaticGramServerIp();
 	const auto list = isTestMode()
 		? gsl::make_span(kBuiltInDcsTest)
 		: gsl::make_span(kBuiltInDcs).subspan(0);
@@ -200,15 +200,15 @@ void DcOptions::constructFromBuiltIn() {
 			entry.id,
 			flags,
 			serverIp,
-			kShuzaGramServerPort,
+			kStaticGramServerPort,
 			{});
 		DEBUG_LOG(("MTP Info: adding built in DC %1 connect option: %2:%3"
 			).arg(entry.id
 			).arg(QString::fromStdString(serverIp)
-			).arg(kShuzaGramServerPort));
+			).arg(kStaticGramServerPort));
 	}
 
-	// ShuzaGram: the self-hosted server has no separate IPv6 endpoint.
+	// StaticGram: the self-hosted server has no separate IPv6 endpoint.
 }
 
 void DcOptions::processFromList(
