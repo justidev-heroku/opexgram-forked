@@ -238,7 +238,7 @@ jobs:
         run: |
           set OUT=%TBUILD%\%REPO_NAME%\out\Debug
           mkdir artifact
-          move %OUT%\StaticGram.exe artifact/
+          if exist %OUT%\StaticGram.exe (move %OUT%\StaticGram.exe artifact\StaticGram.exe) else (move %OUT%\Telegram.exe artifact\StaticGram.exe)
           if exist %OUT%\Updater.exe move %OUT%\Updater.exe artifact/
       - uses: actions/upload-artifact@v7
         name: Upload artifact.
