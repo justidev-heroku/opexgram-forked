@@ -3543,7 +3543,12 @@ void EmojiListWidget::refreshCustom() {
 		auto it = sets.find(lookupId);
 		if (it == sets.cend()
 			|| it->second->stickers.isEmpty()
-			|| (_mode == Mode::BackgroundEmoji && !it->second->textColor())
+			|| (_mode == Mode::BackgroundEmoji
+				&& !it->second->textColor()
+				&& !ranges::all_of(it->second->stickers, [](DocumentData *d) {
+					const auto sticker = d->sticker();
+					return sticker && sticker->isStatic();
+				}))
 			|| (_mode == Mode::ChannelStatus
 				&& !it->second->channelStatus())) {
 			return;
