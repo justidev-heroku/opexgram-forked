@@ -1,30 +1,11 @@
 name: Linux.
 
 on:
+  workflow_dispatch:
   push:
-    # Pushes to the canary branches run only canary.yml, see there.
-    branches-ignore:
-      - public-canary
-      - private-canary
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - 'changelog.txt'
-      - 'LEGAL'
-      - 'LICENSE'
-      - '.github/**'
-      - '!.github/workflows/linux.yml'
-      - 'snap/**'
-      - 'Telegram/build/**'
-      - '!Telegram/build/docker/centos_env/**'
-      - 'Telegram/Resources/uwp/**'
-      - 'Telegram/Resources/winrc/**'
-      - 'Telegram/SourceFiles/platform/win/**'
-      - 'Telegram/SourceFiles/platform/mac/**'
-      - 'Telegram/Telegram/**'
-      - 'Telegram/configure.bat'
-      - 'Telegram/Telegram.plist'
-  pull_request:
+    # StaticGram: build the Linux AppImage only from our branch.
+    branches:
+      - staticgram-desktop
     paths-ignore:
       - 'docs/**'
       - '**.md'
@@ -47,8 +28,9 @@ on:
 jobs:
 
   linux:
-    name: Rocky Linux 8
-    runs-on: ${{ (github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/nightly') && 'depot-ubuntu-latest-16' || 'ubuntu-latest' }}
+    name: Rocky Linux 8 (x86_64 AppImage)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
 
     strategy:
       matrix:
@@ -136,10 +118,8 @@ jobs:
           if [ -n "${{ matrix.defines }}" ]; then
             DEFINE="-D ${{ matrix.defines }}=ON"
             echo Define from matrix: $DEFINE
-            echo "ARTIFACT_NAME=Telegram ${{ matrix.defines }}" >> $GITHUB_ENV
-          else
-            echo "ARTIFACT_NAME=Telegram" >> $GITHUB_ENV
           fi
+          echo "ARTIFACT_NAME=StaticGram-Linux-x64" >> $GITHUB_ENV
 
           ccache -z
 
@@ -147,17 +127,15 @@ jobs:
           -u $(id -u) \
           -v $PWD:/usr/src/tdesktop \
           -v ${{ env.CCACHE_DIR }}:/var/cache/ccache \
-          -e CONFIG=Debug \
+          -e CONFIG=Release \
           -e CCACHE_SLOPPINESS=pch_defines,time_macros \
           $IMAGE_TAG \
           env -u CCACHE_DISABLE /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
-          -D CMAKE_CONFIGURATION_TYPES=Debug \
-          -D CMAKE_C_FLAGS_DEBUG="-O0 -fpch-preprocess" \
-          -D CMAKE_CXX_FLAGS_DEBUG="-O0 -fpch-preprocess" \
-          -D CMAKE_COMPILE_WARNING_AS_ERROR=ON \
+          -D CMAKE_CONFIGURATION_TYPES=Release \
+          -D CMAKE_BUILD_TYPE=Release \
           -D TDESKTOP_API_TEST=ON \
-          -D DESKTOP_APP_DISABLE_AUTOUPDATE=OFF \
-          -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
+          -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON \
+          -D DESKTOP_APP_DISABLE_CRASH_REPORTS=ON \
           $DEFINE
 
       - name: Count ccache misses.
@@ -169,47 +147,94 @@ jobs:
           echo "misses=$MISSES" >> $GITHUB_OUTPUT
           echo "ccache misses this run: $MISSES"
 
-      - name: Trim Telegram Desktop cache.
-        if: >
-          env.ONLY_CACHE == 'false'
-            && github.ref_name == github.event.repository.default_branch
-            && fromJSON(steps.ccache-stats.outputs.misses) > 300
-        run: ccache --evict-older-than 1d
-
-      - name: Save Telegram Desktop cache.
-        if: >
-          env.ONLY_CACHE == 'false'
-            && github.ref_name == github.event.repository.default_branch
-            && fromJSON(steps.ccache-stats.outputs.misses) > 300
-        uses: actions/cache/save@v6
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ steps.cache-tdesktop.outputs.cache-primary-key }}
-
       - name: Check.
         if: env.ONLY_CACHE == 'false'
         run: |
-          filePath="out/Debug/Telegram"
+          filePath="out/Release/Telegram"
           if test -f "$filePath"; then
             echo "Build successfully done! :)"
-
             size=$(stat -c %s "$filePath")
             echo "File size of ${filePath}: ${size} Bytes."
+            ldd "$filePath" || true
           else
             echo "Build error, output file does not exist."
             exit 1
           fi
 
-      - name: Move artifact.
+      - name: Package AppImage.
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          cd out/Debug
-          mkdir artifact
-          mv {Telegram,Updater} artifact/
+          set -e
+          mkdir -p dist
+          cp out/Release/Telegram dist/StaticGram
+          strip dist/StaticGram || true
+          chmod 755 dist/StaticGram
+
+          # Plain tarball with the binary.
+          mkdir -p tarball/StaticGram
+          cp dist/StaticGram tarball/StaticGram/
+          tar -C tarball -czf dist/StaticGram-Linux-x64.tar.gz StaticGram
+
+          # AppDir: the binary is self-contained (static Qt, glibc 2.28),
+          # system libraries are picked up at runtime like the official build.
+          APPDIR=$PWD/StaticGram.AppDir
+          mkdir -p $APPDIR/usr/bin $APPDIR/usr/share/applications
+          cp dist/StaticGram $APPDIR/usr/bin/StaticGram
+          for s in 16 32 48 64 128 256 512; do
+            d=$APPDIR/usr/share/icons/hicolor/${s}x${s}/apps
+            mkdir -p $d
+            cp Telegram/Resources/art/icon${s}.png $d/StaticGram.png
+          done
+          cp Telegram/Resources/art/icon256.png $APPDIR/StaticGram.png
+          ln -sf StaticGram.png $APPDIR/.DirIcon
+          cat > $APPDIR/usr/share/applications/StaticGram.desktop <<'EOF'
+          [Desktop Entry]
+          Name=StaticGram
+          Comment=StaticGram messenger
+          Exec=StaticGram -- %u
+          Icon=StaticGram
+          Terminal=false
+          StartupWMClass=StaticGram
+          Type=Application
+          Categories=Chat;Network;InstantMessaging;Qt;
+          MimeType=x-scheme-handler/sg;
+          Keywords=tg;chat;im;messaging;messenger;staticgram;
+          SingleMainWindow=true
+          X-GNOME-UsesNotifications=true
+          EOF
+          cp $APPDIR/usr/share/applications/StaticGram.desktop $APPDIR/StaticGram.desktop
+          cat > $APPDIR/AppRun <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/StaticGram" "$@"
+          EOF
+          chmod 755 $APPDIR/AppRun
+
+          curl -sSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool --no-appstream $APPDIR dist/StaticGram-x86_64.AppImage
+          chmod 755 dist/StaticGram-x86_64.AppImage
+          ls -la dist
+          sha256sum dist/*
+
+      - name: Smoke test.
+        if: env.UPLOAD_ARTIFACT == 'true'
+        run: |
+          cd dist
+          APPIMAGE_EXTRACT_AND_RUN=1 QT_QPA_PLATFORM=offscreen timeout 20 ./StaticGram-x86_64.AppImage --version || echo "exit $?"
+
       - uses: actions/upload-artifact@v7
         if: env.UPLOAD_ARTIFACT == 'true'
-        name: Upload artifact.
+        name: Upload AppImage.
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: out/Debug/artifact/
-          retention-days: 1
+          name: StaticGram-x86_64.AppImage
+          path: dist/StaticGram-x86_64.AppImage
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v7
+        if: env.UPLOAD_ARTIFACT == 'true'
+        name: Upload tarball.
+        with:
+          name: StaticGram-Linux-x64.tar.gz
+          path: dist/StaticGram-Linux-x64.tar.gz
+          retention-days: 7
