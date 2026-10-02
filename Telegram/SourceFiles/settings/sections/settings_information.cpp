@@ -1224,7 +1224,7 @@ void BuildInformationSection(SectionBuilder &builder) {
 		return SearchEntry{
 			.id = u"edit/username"_q,
 			.title = tr::lng_settings_username_label(tr::now),
-			.keywords = { u"username"_q, u"link"_q, u"t.me"_q, u"staticgram.top"_q },
+			.keywords = { u"username"_q, u"link"_q, u"staticgram.top"_q },
 		};
 	});
 	builder.add(nullptr, [] {

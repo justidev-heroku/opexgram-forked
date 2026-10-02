@@ -1352,9 +1352,7 @@ void ShowActionLocked(
 		std::shared_ptr<ChatHelpers::Show> show,
 		const QString &slug) {
 	const auto open = [=] {
-		UrlClickHandler::Open(u"https://fragment.com/gift/"_q
-			+ slug
-			+ u"?collection=my"_q);
+		UrlClickHandler::Open(u"https://staticgram.top/nft/"_q + slug);
 	};
 	show->show(Ui::MakeConfirmBox({
 		.text = tr::lng_gift_transfer_locked_text(),

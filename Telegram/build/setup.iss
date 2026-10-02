@@ -1,7 +1,7 @@
 #define MyAppShortName "StaticGram"
 #define MyAppName "StaticGram"
 #define MyAppPublisher "StaticGram"
-#define MyAppURL "https://sgq.me"
+#define MyAppURL "https://dl.staticgram.top/"
 #define MyAppExeName "StaticGram.exe"
 #define MyAppId "2CAB6458-34FE-4FEC-A5F6-238ED753133D"
 #define CurrentYear GetDateTimeString('yyyy','','')

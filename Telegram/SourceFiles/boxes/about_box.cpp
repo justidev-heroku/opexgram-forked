@@ -38,7 +38,7 @@ namespace {
 rpl::producer<TextWithEntities> Text1() {
 	return tr::lng_about_text1(
 		lt_api_link,
-		tr::lng_about_text1_api(tr::url(u"https://core.telegram.org/api"_q)),
+		tr::lng_about_text1_api(tr::url(u"https://docs.staticgram.top/"_q)),
 		tr::marked);
 }
 
@@ -134,20 +134,7 @@ void AboutBox(not_null<Ui::GenericBox*> box) {
 }
 
 QString telegramFaqLink() {
-	const auto result = u"https://telegram.org/faq"_q;
-	const auto langpacked = [&](const char *language) {
-		return result + '/' + language;
-	};
-	const auto current = Lang::Id();
-	for (const auto language : { "de", "es", "it", "ko" }) {
-		if (current.startsWith(QLatin1String(language))) {
-			return langpacked(language);
-		}
-	}
-	if (current.startsWith(u"pt-br"_q)) {
-		return langpacked("br");
-	}
-	return result;
+	return u"https://docs.staticgram.top/faq"_q;
 }
 
 namespace {

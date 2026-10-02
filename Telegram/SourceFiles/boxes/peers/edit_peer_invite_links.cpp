@@ -299,12 +299,6 @@ QString Row::generateName() {
 		u"https://"_q,
 		QString()
 	).replace(
-		u"t.me/+"_q,
-		QString()
-	).replace(
-		u"t.me/joinchat/"_q,
-		QString()
-	).replace(
 		u"staticgram.top/+"_q,
 		QString()
 	).replace(

@@ -76,6 +76,16 @@ constexpr auto kTmpPasswordReserveTime = TimeId(10);
 	// This domain should start with 'http[s]://' and end with '/'.
 	// Like 'https://telegram.me/' or 'https://t.me/'.
 	const auto &domain = session->serverConfig().internalLinksDomain;
+	// StaticGram: never generate links on Telegram's own domains, even if
+	// an old cached config still carries them.
+	static const auto kForeign = QRegularExpression(
+		u"^https?://(www\\.)?(t\\.me|telegram\\.(me|dog))/"_q,
+		QRegularExpression::CaseInsensitiveOption);
+	if (kForeign.match(domain).hasMatch()) {
+		return MTP::ConfigFields(
+			session->mtp().environment()
+		).internalLinksDomain;
+	}
 	const auto prefixes = {
 		u"https://"_q,
 		u"http://"_q,
