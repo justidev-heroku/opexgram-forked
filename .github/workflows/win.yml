@@ -259,6 +259,15 @@ jobs:
           fi
           echo "TDESKTOP_BUILD_API=$API" >> $GITHUB_ENV
 
+      - name: Free runner disk on C.
+        shell: pwsh
+        run: |
+          Get-PSDrive C | Select-Object Used,Free
+          foreach ($p in @('C:\Android','C:\hostedtoolcache\windows\go','C:\hostedtoolcache\windows\Ruby','C:\hostedtoolcache\windows\PyPy','C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk','C:\Program Files\dotnet\sdk','C:\ghcup','C:\Strawberry','C:\Julia','C:\Miniconda','C:\selenium','C:\tools\php')) {
+            if (Test-Path $p) { Remove-Item $p -Recurse -Force -ErrorAction SilentlyContinue }
+          }
+          Get-PSDrive C | Select-Object Used,Free
+
       - name: Free up some disk space.
         shell: bash
         run: find $LibrariesPath '(' '(' ! '(' -name '*.lib' -o -name '*.a' -o -name '*.exe' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -name '*.pc' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -path '*/nv-codec-headers/*' ')' -type f ')' -o -empty ')' -delete
