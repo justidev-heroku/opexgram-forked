@@ -17,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtNetwork/QHostInfo>
 
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -35,29 +36,45 @@ struct BuiltInDc {
 
 // StaticGram runs a single, self-hosted MTProto server (gramsrv), not the
 // real multi-DC Telegram backend. Every dc_id below points at the same
-// server, whose IP is resolved from this domain at startup via DNS, so the
-// server can move to a new IP by just updating the domain's A record. If DNS
-// fails, the baked-in fallback IP below is used instead. Server-provided
-// dc_options (help.getConfig) still override these built-in endpoints at
-// runtime.
+// server. Startup never blocks on DNS: the built-in DCs are always built
+// with the baked-in IP (or with the IP already resolved earlier in this
+// process), and dc.staticgram.top is resolved asynchronously afterwards
+// (see DcOptions::startBuiltInServerLookup). If the domain points at a
+// different IPv4, the built-in endpoints that still use the baked-in IP are
+// moved to it and the affected DCs reconnect. Server-provided dc_options
+// (help.getConfig) and any other non-built-in endpoints are never touched.
 constexpr auto kStaticGramServerHost = "dc.staticgram.top";
 constexpr auto kStaticGramServerPort = 2398;
 constexpr auto kStaticGramServerFallbackIp = "13.143.160.46";
 
-// Falls back to kStaticGramServerFallbackIp if DNS resolution fails.
-[[nodiscard]] std::string ResolveStaticGramServerIp() {
-	const auto info = QHostInfo::fromName(
-		QString::fromLatin1(kStaticGramServerHost));
+std::mutex StaticGramResolvedIpMutex;
+std::string StaticGramResolvedIp; // Guarded by StaticGramResolvedIpMutex.
+
+// Never blocks: the IP resolved earlier in this process, or the fallback.
+[[nodiscard]] std::string CurrentStaticGramServerIp() {
+	std::lock_guard<std::mutex> lock(StaticGramResolvedIpMutex);
+	return StaticGramResolvedIp.empty()
+		? std::string(kStaticGramServerFallbackIp)
+		: StaticGramResolvedIp;
+}
+
+void RememberStaticGramServerIp(const std::string &ip) {
+	std::lock_guard<std::mutex> lock(StaticGramResolvedIpMutex);
+	StaticGramResolvedIp = ip;
+}
+
+// Empty string if the lookup gave no usable IPv4 address.
+[[nodiscard]] std::string PickStaticGramServerIp(const QHostInfo &info) {
 	for (const auto &address : info.addresses()) {
-		if (address.protocol() == QAbstractSocket::IPv4Protocol) {
-			return address.toString().toStdString();
+		if (address.protocol() != QAbstractSocket::IPv4Protocol
+			|| address.isNull()
+			|| address.isLoopback()
+			|| address == QHostAddress(QHostAddress::AnyIPv4)) {
+			continue;
 		}
+		return address.toString().toStdString();
 	}
-	LOG(("MTP Warning: DNS lookup of %1 failed (%2), using fallback IP %3."
-		).arg(kStaticGramServerHost
-		).arg(info.errorString()
-		).arg(kStaticGramServerFallbackIp));
-	return std::string(kStaticGramServerFallbackIp);
+	return {};
 }
 
 const BuiltInDc kBuiltInDcs[] = {
@@ -347,18 +364,11 @@ void DcOptions::constructFromBuiltIn() {
 
 	readBuiltInPublicKeys();
 
-	const auto serverIp = ResolveStaticGramServerIp();
+	const auto serverIp = CurrentStaticGramServerIp();
 	const auto list = isTestMode()
 		? gsl::make_span(kBuiltInDcsTest)
 		: gsl::make_span(kBuiltInDcs).subspan(0);
-	if (serverIp.empty()) {
-		LOG(("MTP Warning: no resolved IP, built-in DCs left without "
-			"an endpoint until the next DcOptions rebuild."));
-	}
 	for (const auto &entry : list) {
-		if (serverIp.empty()) {
-			continue;
-		}
 		const auto flags = Flag::f_static | 0;
 		applyOneGuarded(
 			entry.id,
@@ -373,6 +383,87 @@ void DcOptions::constructFromBuiltIn() {
 	}
 
 	// StaticGram: the self-hosted server has no separate IPv6 endpoint.
+}
+
+void DcOptions::startBuiltInServerLookup(not_null<QObject*> context) {
+	if (_immutable) {
+		return;
+	}
+	// Asynchronous: the result is delivered later on the context's thread
+	// (the main thread for MTP::Instance), nothing waits for DNS here.
+	QHostInfo::lookupHost(
+		QString::fromLatin1(kStaticGramServerHost),
+		context.get(),
+		[this](const QHostInfo &info) {
+			const auto ip = PickStaticGramServerIp(info);
+			if (ip.empty()) {
+				LOG(("MTP Warning: DNS lookup of %1 failed (%2), "
+					"keeping IP %3."
+					).arg(kStaticGramServerHost
+					).arg(info.errorString()
+					).arg(QString::fromStdString(CurrentStaticGramServerIp())));
+				return;
+			}
+			RememberStaticGramServerIp(ip);
+			applyResolvedBuiltInServerIp(ip);
+		});
+}
+
+void DcOptions::applyResolvedBuiltInServerIp(const std::string &ip) {
+	if (_immutable || ip == kStaticGramServerFallbackIp) {
+		return;
+	}
+	const auto builtInFlags = Flags(Flag::f_static);
+	auto changed = std::vector<DcId>();
+	{
+		WriteLocker lock(this);
+		for (auto &[dcId, endpoints] : _data) {
+			auto moved = false;
+			for (auto &endpoint : endpoints) {
+				// Only the built-in endpoints: baked-in IP, our port and
+				// exactly the built-in flags. Saved / server endpoints that
+				// differ in anything are left as they are.
+				if (endpoint.ip == kStaticGramServerFallbackIp
+					&& endpoint.port == kStaticGramServerPort
+					&& endpoint.flags.value() == builtInFlags.value()
+					&& endpoint.secret.empty()) {
+					endpoint.ip = ip;
+					moved = true;
+				}
+			}
+			if (!moved) {
+				continue;
+			}
+			// Drop duplicates if the resolved IP was already listed.
+			auto unique = std::vector<Endpoint>();
+			unique.reserve(endpoints.size());
+			for (auto &endpoint : endpoints) {
+				const auto duplicate = ranges::any_of(unique, [&](
+						const Endpoint &other) {
+					return (other.ip == endpoint.ip)
+						&& (other.port == endpoint.port)
+						&& (other.flags.value() == endpoint.flags.value())
+						&& (other.secret == endpoint.secret);
+				});
+				if (!duplicate) {
+					unique.push_back(std::move(endpoint));
+				}
+			}
+			endpoints = std::move(unique);
+			changed.push_back(dcId);
+		}
+	}
+	if (!changed.empty()) {
+		LOG(("MTP Info: %1 resolved to %2, moved %3 built-in DC(s) "
+			"off the baked-in IP %4."
+			).arg(kStaticGramServerHost
+			).arg(QString::fromStdString(ip)
+			).arg(int(changed.size())
+			).arg(kStaticGramServerFallbackIp));
+	}
+	for (const auto dcId : changed) {
+		_changed.fire_copy(dcId);
+	}
 }
 
 void DcOptions::processFromList(

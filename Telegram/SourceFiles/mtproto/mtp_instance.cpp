@@ -386,6 +386,13 @@ void Instance::Private::start() {
 
 	Assert(!hasMainDcId() == isKeysDestroyer());
 	requestConfig();
+
+	// StaticGram: sessions above already connect to the baked-in IP; the
+	// server domain is resolved asynchronously and, if it differs, the
+	// built-in DCs are moved over (dcOptions().changed() -> reconnect).
+	if (!isKeysDestroyer()) {
+		dcOptions().startBuiltInServerLookup(_instance);
+	}
 }
 
 void Instance::Private::resolveProxyDomain(const QString &host) {

@@ -84,6 +84,13 @@ public:
 	void addFromList(const MTPVector<MTPDcOption> &options);
 	void addFromOther(DcOptions &&options);
 
+	// StaticGram: resolve the server domain in the background (never
+	// blocking) and move built-in endpoints still on the baked-in IP to the
+	// resolved one, firing changed() for the affected DCs. The result is
+	// delivered on the context's thread and dropped if the context is gone,
+	// so this object must stay alive while the context can process events.
+	void startBuiltInServerLookup(not_null<QObject*> context);
+
 	[[nodiscard]] std::vector<DcId> configEnumDcIds() const;
 
 	struct Variants {
@@ -140,6 +147,7 @@ private:
 	void computeCdnDcIds();
 
 	void readBuiltInPublicKeys();
+	void applyResolvedBuiltInServerIp(const std::string &ip);
 
 	class WriteLocker;
 	friend class WriteLocker;
