@@ -340,7 +340,14 @@ void Launcher::init() {
 	prepareSettings();
 	initQtMessageLogging();
 
+#ifdef Q_OS_LINUX
+	// StaticGram: own data dir (~/.local/share/StaticGram) and own
+	// single-instance socket, so we never share tdata with or get
+	// swallowed by an installed Telegram Desktop.
+	QApplication::setApplicationName(u"StaticGram"_q);
+#else // Q_OS_LINUX
 	QApplication::setApplicationName(u"TelegramDesktop"_q);
+#endif // !Q_OS_LINUX
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 	// fallback session management is useless for tdesktop since it doesn't have
@@ -577,7 +584,16 @@ QByteArray Launcher::instanceHash() const {
 				QDir(cWorkingDir()).absolutePath());
 			hashMd5Hex(d.constData(), d.size(), h.data());
 		} else {
+#ifdef Q_OS_LINUX
+			// StaticGram: an AppImage runs from a random mount point,
+			// hash the stable .AppImage path instead.
+			const auto appimage = qEnvironmentVariable("APPIMAGE");
+			const auto f = QFile::encodeName(appimage.isEmpty()
+				? (cExeDir() + cExeName())
+				: appimage);
+#else // Q_OS_LINUX
 			const auto f = QFile::encodeName(cExeDir() + cExeName());
+#endif // !Q_OS_LINUX
 			hashMd5Hex(f.constData(), f.size(), h.data());
 		}
 		return h;

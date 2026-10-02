@@ -670,6 +670,11 @@ bool SkipTaskbarSupported() {
 }
 
 QString ExecutablePathForShortcuts() {
+	// StaticGram: inside an AppImage point shortcuts at the .AppImage file.
+	if (const auto appimage = qEnvironmentVariable("APPIMAGE")
+			; !appimage.isEmpty()) {
+		return appimage;
+	}
 	if (Core::UpdaterDisabled()) {
 		const auto &arguments = Core::Launcher::Instance().arguments();
 		if (!arguments.isEmpty()) {
@@ -686,9 +691,8 @@ QString ExecutablePathForShortcuts() {
 } // namespace Platform
 
 QString psAppDataPath() {
-	// Previously we used ~/.TelegramDesktop, so look there first.
-	// If we find data there, we should still use it.
-	auto home = QDir::homePath();
+	// StaticGram: never pick up Telegram's legacy ~/.TelegramDesktop data.
+	auto home = QString();
 	if (!home.isEmpty()) {
 		auto oldPath = home + u"/.TelegramDesktop/"_q;
 		auto oldSettingsBase = oldPath + u"tdata/settings"_q;
@@ -742,7 +746,8 @@ void start() {
 				Core::Launcher::Instance().instanceHash().constData());
 		}
 
-		return u"org.telegram.desktop"_q;
+		// StaticGram: own app id, matches StaticGram.desktop in the AppImage.
+		return u"StaticGram"_q;
 	}());
 
 	LOG(("App ID: %1").arg(QGuiApplication::desktopFileName()));
