@@ -1,0 +1,150 @@
+name: StaticGram iOS (unsigned IPA)
+
+on:
+  push:
+    branches: [staticgram-ios]
+    paths:
+      - ".github/workflows/ios.yml"
+      - "ios/**"
+  workflow_dispatch:
+
+concurrency:
+  group: staticgram-ios
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TG_TAG: release-12.9.2
+  XCODE_APP: /Applications/Xcode_26.2.app
+  BUNDLE_ID: com.staticgram.ios
+  APP_NAME: StaticGram
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 350
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - name: Checkout patches
+        uses: actions/checkout@v4
+        with:
+          path: sg
+
+      - name: Free disk space
+        run: |
+          df -h /
+          for x in /Applications/Xcode_*.app; do
+            [ "$x" = "$XCODE_APP" ] && continue
+            [ -L "$x" ] && continue
+            sudo rm -rf "$x" &
+          done
+          sudo rm -rf ~/Library/Android /usr/local/share/dotnet ~/.dotnet ~/Library/Developer/CoreSimulator/Caches &
+          wait
+          df -h /
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Clone Telegram-iOS ${{ env.TG_TAG }}
+        run: |
+          git clone --depth 1 --branch "$TG_TAG" https://github.com/TelegramMessenger/Telegram-iOS.git tg
+          cd tg
+          git submodule update --init --recursive --depth 1 --jobs 8 || git submodule update --init --recursive --jobs 8
+          git submodule status --recursive | head -40
+          cat versions.json
+
+      - name: Apply StaticGram patches
+        env:
+          SG_SERVER_HOST: ${{ secrets.SG_SERVER_HOST }}
+          SG_SERVER_PORT: "2398"
+        run: |
+          test -n "$SG_SERVER_HOST" || { echo "secret SG_SERVER_HOST is not set"; exit 1; }
+          python3 sg/ios/apply_patches.py tg sg/ios
+          cd tg && git status --short | head -40
+
+      - name: Build configuration + codesigning
+        run: |
+          cd tg
+          mkdir -p build-input sg-codesigning
+          cat > build-input/sg-configuration.json <<EOF
+          {
+            "bundle_id": "$BUNDLE_ID",
+            "api_id": "8",
+            "api_hash": "7245de8e747a0d6fbe11f7cc14fcc0bb",
+            "team_id": "C67CF9S4VU",
+            "app_center_id": "0",
+            "is_internal_build": "false",
+            "is_appstore_build": "false",
+            "appstore_id": "0",
+            "app_specific_url_scheme": "tg",
+            "premium_iap_product_id": "",
+            "enable_siri": false,
+            "enable_icloud": false
+          }
+          EOF
+          cp -R ../sg/ios/codesigning/profiles sg-codesigning/profiles
+          cp -R build-system/fake-codesigning/certs sg-codesigning/certs
+          sed -i '' 's/subprocess.check_call/subprocess.call/' build-system/Make/ImportCertificates.py || true
+          python3 build-system/Make/ImportCertificates.py --path "$PWD/sg-codesigning/certs" || true
+          security find-identity -v -p codesigning
+
+      - name: Restore Bazel cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/telegram-bazel-cache
+          key: sg-ios-bazel-${{ env.TG_TAG }}-${{ github.run_id }}
+          restore-keys: |
+            sg-ios-bazel-${{ env.TG_TAG }}-
+
+      - name: Build (release_arm64)
+        run: |
+          cd tg
+          python3 -u build-system/Make/Make.py \
+            --cacheDir="$HOME/telegram-bazel-cache" \
+            --overrideXcodeVersion \
+            build \
+            --configurationPath="$PWD/build-input/sg-configuration.json" \
+            --codesigningInformationPath="$PWD/sg-codesigning" \
+            --buildNumber=$((30000 + ${{ github.run_number }})) \
+            --configuration=release_arm64 \
+            --outputBuildArtifactsPath="$PWD/build/artifacts"
+          ls -la build/artifacts
+
+      - name: Save Bazel cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/telegram-bazel-cache
+          key: sg-ios-bazel-${{ env.TG_TAG }}-${{ github.run_id }}
+
+      - name: Package IPA
+        run: |
+          set -euo pipefail
+          VER=$(python3 -c "import json;print(json.load(open('tg/versions.json'))['app'])")
+          rm -rf pkg && mkdir pkg && cd pkg
+          unzip -q ../tg/build/artifacts/Telegram.ipa
+          ls Payload
+          APP=Payload/$APP_NAME.app
+          mv Payload/Telegram.app "$APP"
+          rm -rf "$APP/PlugIns" "$APP/Watch" "$APP/Extensions" Symbols SwiftSupport
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" -c "Print :CFBundleDisplayName" -c "Print :CFBundleShortVersionString" -c "Print :CFBundleVersion" "$APP/Info.plist"
+          codesign -d --entitlements :- "$APP" 2>/dev/null | head -60 || true
+          OUT="StaticGram-iOS-$VER-${{ github.run_number }}.ipa"
+          zip -qry "../$OUT" Payload
+          cd .. && ls -la "$OUT" && shasum -a 256 "$OUT"
+          echo "IPA=$OUT" >> "$GITHUB_ENV"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: StaticGram-iOS
+          path: ${{ env.IPA }}
+          retention-days: 3
+          compression-level: 0
