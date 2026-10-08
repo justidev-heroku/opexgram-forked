@@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history.h"
 #include "history/history_item.h"
 #include "info/channel_statistics/boosts/giveaway/boost_badge.h" // InfiniteRadialAnimationWidget.
+#include "lang/lang_instance.h"
 #include "lang/lang_keys.h"
 #include "main/session/session_show.h"
 #include "main/main_session.h"
@@ -26,6 +27,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "payments/payments_form.h"
 #include "settings/settings_credits_graphics.h"
 #include "ui/boxes/confirm_box.h"
+#include "ui/boxes/emoji_stake_box.h" // InsufficientTonBox.
+#include "ui/controls/ton_common.h" // kNanosInOne.
 #include "ui/controls/userpic_button.h"
 #include "ui/effects/credits_graphics.h"
 #include "ui/effects/premium_graphics.h"
@@ -34,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/layers/generic_box.h"
 #include "ui/painter.h"
 #include "ui/rect.h"
+#include "ui/text/format_values.h"
 #include "ui/text/text_utilities.h"
 #include "ui/vertical_list.h"
 #include "ui/widgets/buttons.h"
@@ -96,6 +100,43 @@ struct PaidMediaData {
 	};
 }
 
+// StaticGram: bot invoices in GRAM (currency "TON", amount in nanoton).
+// The GRAM strings are not in the cloud langpacks, so pick ru / en here.
+[[nodiscard]] bool IsRussianUi() {
+	const auto id = Lang::GetInstance().id().toLower();
+	const auto base = Lang::GetInstance().baseId().toLower();
+	return id.startsWith(u"ru"_q) || base.startsWith(u"ru"_q);
+}
+
+[[nodiscard]] CreditsAmount TonFormAmount(
+		not_null<Payments::CreditsFormData*> form) {
+	const auto nanos = int64(form->invoice.amount);
+	return CreditsAmount(
+		nanos / Ui::kNanosInOne,
+		nanos % Ui::kNanosInOne,
+		CreditsType::Ton);
+}
+
+[[nodiscard]] TextWithEntities TonConfirmText(
+		not_null<Main::Session*> session,
+		not_null<Payments::CreditsFormData*> form) {
+	const auto bot = session->data().user(form->botId);
+	const auto ru = IsRussianUi();
+	auto result = TextWithEntities();
+	result.append(ru
+		? u"Вы точно хотите приобрести "_q
+		: u"Do you want to buy "_q);
+	result.append(tr::bold(u"\u00AB"_q + form->title + u"\u00BB"_q));
+	result.append(ru ? u" в "_q : u" in "_q);
+	result.append(tr::bold(bot->name()));
+	result.append(ru ? u" за "_q : u" for "_q);
+	result.append(tr::bold(Ui::FillAmountAndCurrency(
+		int64(form->invoice.amount),
+		Ui::kTonCurrency)));
+	result.append(u"?"_q);
+	return result;
+}
+
 void AddTerms(
 		not_null<Ui::BoxContent*> box,
 		not_null<Ui::RpWidget*> button,
@@ -137,6 +178,9 @@ void AddTerms(
 [[nodiscard]] rpl::producer<TextWithEntities> SendCreditsConfirmText(
 		not_null<Main::Session*> session,
 		not_null<Payments::CreditsFormData*> form) {
+	if (form->invoice.ton) {
+		return rpl::single(TonConfirmText(session, form));
+	}
 	if (const auto data = LookupPaidMediaData(session, form)) {
 		auto photos = 0;
 		auto videos = 0;
@@ -351,7 +395,7 @@ void SendCreditsBox(
 		SendCreditsThumbnail(content, session, form.get(), photoSize),
 		style::al_top);
 	thumb->setAttribute(Qt::WA_TransparentForMouseEvents);
-	if (form->invoice.subscriptionPeriod) {
+	if (form->invoice.subscriptionPeriod && !form->invoice.ton) {
 		const auto badge = SendCreditsBadge(content, form->invoice.amount);
 		thumb->geometryValue() | rpl::on_next([=](const QRect &r) {
 			badge->moveToLeft(
@@ -406,6 +450,9 @@ void SendCreditsBox(
 				session->api().applyUpdates(data.vupdates());
 			}, [](const MTPDpayments_paymentVerificationNeeded &data) {
 			});
+			if (form->invoice.ton) {
+				session->credits().tonLoad(true);
+			}
 			if (weak) {
 				state->confirmButtonBusy = false;
 				box->closeBox();
@@ -428,13 +475,44 @@ void SendCreditsBox(
 			} else if (id == u"BOT_PRECHECKOUT_TIMEOUT"_q) {
 				show->showToast(
 					tr::lng_payments_precheckout_stars_timeout(tr::now));
+			} else if (form->invoice.ton && id == u"BALANCE_TOO_LOW"_q) {
+				session->credits().tonLoad(true);
+				show->showBox(Box(
+					Ui::InsufficientTonBox,
+					session,
+					TonFormAmount(form.get())));
 			} else {
 				show->showToast(id);
 			}
 		}).send();
 	};
 
+	const auto tonCheckLifetime = box->lifetime().make_state<rpl::lifetime>();
 	const auto button = box->addButton(rpl::single(QString()), [=] {
+		if (form->invoice.ton) {
+			// StaticGram: pay GRAM invoices from the GRAM (TON) balance.
+			if (state->confirmButtonBusy.current()) {
+				return;
+			}
+			const auto required = TonFormAmount(form.get());
+			const auto credits = &session->credits();
+			credits->tonLoad(true);
+			tonCheckLifetime->destroy();
+			credits->tonLoadedValue(
+			) | rpl::filter(rpl::mappers::_1) | rpl::take(
+				1
+			) | rpl::on_next([=] {
+				if (credits->tonBalance() < required) {
+					box->uiShow()->showBox(Box(
+						Ui::InsufficientTonBox,
+						session,
+						required));
+				} else {
+					sendStars();
+				}
+			}, *tonCheckLifetime);
+			return;
+		}
 		Settings::MaybeRequestBalanceIncrease(
 			Main::MakeSessionShow(box->uiShow(), session),
 			form->invoice.credits,
@@ -449,7 +527,7 @@ void SendCreditsBox(
 				}
 			});
 	});
-	if (form->invoice.subscriptionPeriod) {
+	if (form->invoice.subscriptionPeriod && !form->invoice.ton) {
 		AddTerms(box, button, stBox);
 	}
 	{
@@ -460,10 +538,18 @@ void SendCreditsBox(
 		AddChildToWidgetCenter(button.data(), loadingAnimation);
 		loadingAnimation->showOn(state->confirmButtonBusy.value());
 	}
+	auto tonLabel = TextWithEntities{ IsRussianUi()
+		? u"Подтвердить и заплатить "_q
+		: u"Confirm and Pay "_q };
+	tonLabel.append(TonAmountWithEmoji(int64(form->invoice.amount)));
+	auto tonButtonText = rpl::producer<TextWithEntities>(
+		rpl::single(std::move(tonLabel)));
 	SetButtonMarkedLabel(
 		button,
 		rpl::combine(
-			(form->invoice.subscriptionPeriod
+			form->invoice.ton
+			? std::move(tonButtonText)
+			: (form->invoice.subscriptionPeriod
 				? tr::lng_credits_box_out_subscription_confirm
 				: tr::lng_credits_box_out_confirm)(
 					lt_count,
@@ -490,11 +576,17 @@ void SendCreditsBox(
 	}
 
 	{
-		session->credits().load(true);
+		if (form->invoice.ton) {
+			session->credits().tonLoad(true);
+		} else {
+			session->credits().load(true);
+		}
 		const auto balance = Settings::AddBalanceWidget(
 			content,
 			session,
-			session->credits().balanceValue(),
+			(form->invoice.ton
+				? session->credits().tonBalanceValue()
+				: session->credits().balanceValue()),
 			false);
 		rpl::combine(
 			balance->sizeValue(),
@@ -518,6 +610,16 @@ TextWithEntities CreditsEmojiSmall() {
 	return Ui::Text::IconEmoji(
 		&st::starIconEmoji,
 		QString(QChar(0x2B50)));
+}
+
+TextWithEntities TonEmojiSmall() {
+	return Ui::Text::IconEmoji(&st::tonIconEmoji);
+}
+
+TextWithEntities TonAmountWithEmoji(int64 nanos) {
+	return TonEmojiSmall().append(Ui::FillAmountAndCurrency(
+		nanos,
+		Ui::kTonCurrency));
 }
 
 not_null<FlatLabel*> SetButtonMarkedLabel(

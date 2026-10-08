@@ -15,6 +15,18 @@ inline constexpr auto FileStatusSizeFailed = 0xFFFFFFF2LL;
 
 inline const QString kCreditsCurrency = u"XTR"_q;
 
+// StaticGram: GRAM is the network's TON currency. Bot invoices, receipts and
+// TON gifts carry currency "TON" with the amount in nanoton (1e-9).
+inline const QString kTonCurrency = u"TON"_q;
+inline const QString kTonCurrencyLabel = u"GRAM"_q;
+
+[[nodiscard]] inline bool IsTonCurrency(const QString &currency) {
+	return (currency.compare(kTonCurrency, Qt::CaseInsensitive) == 0);
+}
+
+// "1.5" for 1'500'000'000 nanoton, without the currency label.
+[[nodiscard]] QString FormatTonNanos(int64 nanos);
+
 [[nodiscard]] QString FormatSizeText(qint64 size);
 [[nodiscard]] QString FormatDownloadText(qint64 ready, qint64 total);
 [[nodiscard]] QString FormatProgressText(qint64 ready, qint64 total);

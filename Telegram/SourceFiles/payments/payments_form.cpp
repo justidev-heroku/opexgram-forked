@@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "smartglocal/smartglocal_error.h"
 #include "smartglocal/smartglocal_token.h"
 #include "storage/storage_account.h"
+#include "ui/controls/ton_common.h" // kNanosInOne.
 #include "ui/image/image.h"
 #include "ui/text/format_values.h"
 #include "ui/text/text_entity.h"
@@ -486,7 +487,10 @@ void Form::requestForm() {
 				: tlPrices.front().data().vamount().v;
 			const auto subscriptionPeriod
 				= data.vinvoice().data().vsubscription_period().value_or(0);
-			if (currency != ::Ui::kCreditsCurrency || !amount) {
+			// StaticGram: GRAM bot invoices come as paymentFormStars with
+			// currency "TON" and the price in nanoton.
+			const auto ton = ::Ui::IsTonCurrency(currency);
+			if ((currency != ::Ui::kCreditsCurrency && !ton) || amount <= 0) {
 				using Type = Error::Type;
 				_updates.fire(Error{ Type::Form, u"Bad Stars Form."_q });
 				return;
@@ -498,6 +502,7 @@ void Form::requestForm() {
 				.currency = currency,
 				.amount = amount,
 				.subscriptionPeriod = subscriptionPeriod,
+				.ton = ton,
 			};
 			const auto formData = CreditsFormData{
 				.id = _id,
@@ -640,7 +645,12 @@ void Form::processReceipt(const MTPDpayments_paymentReceiptStars &data) {
 				ImageLocation())
 			: nullptr,
 		.peerId = peerFromUser(data.vbot_id().v),
-		.credits = CreditsAmount(data.vtotal_amount().v),
+		.credits = ::Ui::IsTonCurrency(qs(data.vcurrency()))
+			? CreditsAmount( // StaticGram: GRAM receipt, nanoton.
+				data.vtotal_amount().v / ::Ui::kNanosInOne,
+				data.vtotal_amount().v % ::Ui::kNanosInOne,
+				CreditsType::Ton)
+			: CreditsAmount(data.vtotal_amount().v),
 		.date = data.vdate().v,
 	};
 	_updates.fire(CreditsReceiptReady{ .data = receiptData });

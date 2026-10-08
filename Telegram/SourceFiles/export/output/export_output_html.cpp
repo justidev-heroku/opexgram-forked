@@ -4222,7 +4222,7 @@ auto HtmlWriter::Wrap::pushMessage(
 			+ data.cost
 			+ ": "
 			+ QString::number(data.amount.value()).toUtf8()
-			+ (data.amount.ton() ? " TON." : " Telegram Stars.");
+			+ (data.amount.ton() ? " GRAM." : " Telegram Stars.");
 	}, [&](const ActionPrizeStars &data) {
 		return "You won a prize in a giveaway organized by "
 			+ peers.wrapPeerName(data.peerId)
@@ -4321,7 +4321,7 @@ auto HtmlWriter::Wrap::pushMessage(
 			+ (data.price
 				? (", for "
 					+ QString::number(data.price.value()).toUtf8()
-					+ (data.price.ton() ? " TON" : " stars"))
+					+ (data.price.ton() ? " GRAM" : " stars"))
 				: "")
 			+ (data.scheduleDate
 				? (", "
@@ -4337,7 +4337,7 @@ auto HtmlWriter::Wrap::pushMessage(
 	}, [&](const ActionSuggestedPostSuccess &data) {
 		return "The paid post was shown for 24 hours and "
 			+ QString::number(data.price.value()).toUtf8()
-			+ (data.price.ton() ? " TON" : " stars")
+			+ (data.price.ton() ? " GRAM" : " stars")
 			+ " were transferred to the channel.";
 	}, [&](const ActionSuggestedPostRefund &data) {
 		return QByteArray() + (data.payerInitiated

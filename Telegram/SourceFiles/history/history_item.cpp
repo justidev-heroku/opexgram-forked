@@ -194,6 +194,9 @@ template <typename T>
 	if (currency == Ui::kCreditsCurrency) {
 		return Ui::CreditsEmojiSmall().append(
 			Lang::FormatCountDecimal(std::abs(amount)));
+	} else if (Ui::IsTonCurrency(currency)) {
+		// StaticGram: GRAM amounts come in nanoton.
+		return Ui::TonAmountWithEmoji(std::abs(amount));
 	}
 	return { Ui::FillAmountAndCurrency(amount, currency) };
 }
@@ -5577,7 +5580,8 @@ void HistoryItem::createServiceFromMtp(const MTPDmessageService &message) {
 		payment->slug = data.vinvoice_slug().value_or_empty();
 		payment->recurringInit = data.is_recurring_init();
 		payment->recurringUsed = data.is_recurring_used();
-		payment->isCreditsCurrency = (currency == Ui::kCreditsCurrency);
+		payment->isCreditsCurrency = (currency == Ui::kCreditsCurrency)
+			|| Ui::IsTonCurrency(currency); // StaticGram: GRAM receipts.
 		payment->amount = AmountAndStarCurrency(amount, currency);
 		payment->invoiceLink = std::make_shared<LambdaClickHandler>([=](
 				ClickContext context) {
@@ -6978,7 +6982,18 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		_history->session().giftBoxStickersPacks().tonLoad();
 		const auto amount = action.vamount().v;
 		const auto currency = qs(action.vcurrency());
-		const auto cost = AmountAndStarCurrency(amount, currency);
+		// StaticGram: the gift is GRAM (crypto_amount, nanoton). The fiat
+		// pair is optional: without it the server repeats "TON"/nanoton.
+		auto cost = Ui::TonAmountWithEmoji(
+			std::abs(action.vcrypto_amount().v));
+		if (amount > 0
+			&& !currency.isEmpty()
+			&& !Ui::IsTonCurrency(currency)
+			&& currency != Ui::kCreditsCurrency) {
+			cost.append(u" (~"_q
+				+ Ui::FillAmountAndCurrency(amount, currency)
+				+ ')');
+		}
 		const auto anonymous = _from->isServiceUser();
 		if (anonymous) {
 			result.text = tr::lng_action_gift_received_anonymous(

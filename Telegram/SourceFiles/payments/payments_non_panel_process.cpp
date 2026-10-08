@@ -39,7 +39,9 @@ bool IsCreditsInvoice(not_null<HistoryItem*> item) {
 	}
 	const auto media = item->media();
 	const auto invoice = media ? media->invoice() : nullptr;
-	return invoice && (invoice->currency == Ui::kCreditsCurrency);
+	return invoice
+		&& ((invoice->currency == Ui::kCreditsCurrency)
+			|| Ui::IsTonCurrency(invoice->currency)); // StaticGram: GRAM.
 }
 
 void ProcessCreditsPayment(

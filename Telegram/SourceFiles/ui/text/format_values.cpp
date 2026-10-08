@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/unixtime.h"
 #include "lang/lang_keys.h"
 #include "countries/countries_instance.h"
+#include "ui/controls/ton_common.h" // FormatTonAmount.
 
 #include <QtCore/QLocale>
 #include <locale>
@@ -182,6 +183,15 @@ QString FillAmountAndCurrency(
 
 	if (currency == kCreditsCurrency) {
 		return QChar(0x2B50) + Lang::FormatCountDecimal(std::abs(amount));
+	} else if (IsTonCurrency(currency)) {
+		// StaticGram: nanoton -> "1.5 GRAM" (not "TON 1,500,000,000.00").
+		const auto prefix = (amount < 0)
+			? QString::fromUtf8("\xe2\x88\x92")
+			: QString();
+		return prefix
+			+ FormatTonNanos(std::abs(amount))
+			+ ' '
+			+ kTonCurrencyLabel;
 	}
 
 	const auto rule = LookupCurrencyRule(currency);
@@ -211,6 +221,10 @@ QString FillAmountAndCurrency(
 		result.append(name);
 	}
 	return result;
+}
+
+QString FormatTonNanos(int64 nanos) {
+	return FormatTonAmount(nanos).full;
 }
 
 CurrencyRule LookupCurrencyRule(const QString &currency) {

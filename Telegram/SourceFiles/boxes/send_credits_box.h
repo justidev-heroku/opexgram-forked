@@ -41,6 +41,10 @@ void SendCreditsBox(
 
 [[nodiscard]] TextWithEntities CreditsEmojiSmall();
 
+// StaticGram: TON (GRAM) icon + "1.5 GRAM" for an amount in nanoton.
+[[nodiscard]] TextWithEntities TonEmojiSmall();
+[[nodiscard]] TextWithEntities TonAmountWithEmoji(int64 nanos);
+
 not_null<FlatLabel*> SetButtonMarkedLabel(
 	not_null<RpWidget*> button,
 	rpl::producer<TextWithEntities> text,
