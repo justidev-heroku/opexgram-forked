@@ -48,7 +48,11 @@ jobs:
 
       - name: Select Xcode
         run: |
-          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          # some third-party build scripts (dav1d) hardcode /Applications/Xcode.app
+          sudo rm -rf /Applications/Xcode.app
+          sudo ln -sfn "$XCODE_APP" /Applications/Xcode.app
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          ls -la /Applications/Xcode.app
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
 
