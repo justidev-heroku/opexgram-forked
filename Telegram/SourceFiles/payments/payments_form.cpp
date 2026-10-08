@@ -647,8 +647,8 @@ void Form::processReceipt(const MTPDpayments_paymentReceiptStars &data) {
 		.peerId = peerFromUser(data.vbot_id().v),
 		.credits = ::Ui::IsTonCurrency(qs(data.vcurrency()))
 			? CreditsAmount( // StaticGram: GRAM receipt, nanoton.
-				data.vtotal_amount().v / ::Ui::kNanosInOne,
-				data.vtotal_amount().v % ::Ui::kNanosInOne,
+				int64(data.vtotal_amount().v) / ::Ui::kNanosInOne,
+				int64(data.vtotal_amount().v) % ::Ui::kNanosInOne,
 				CreditsType::Ton)
 			: CreditsAmount(data.vtotal_amount().v),
 		.date = data.vdate().v,

@@ -6985,7 +6985,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		// StaticGram: the gift is GRAM (crypto_amount, nanoton). The fiat
 		// pair is optional: without it the server repeats "TON"/nanoton.
 		auto cost = Ui::TonAmountWithEmoji(
-			std::abs(action.vcrypto_amount().v));
+			std::abs(int64(action.vcrypto_amount().v)));
 		if (amount > 0
 			&& !currency.isEmpty()
 			&& !Ui::IsTonCurrency(currency)
