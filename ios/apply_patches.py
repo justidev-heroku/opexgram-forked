@@ -328,10 +328,90 @@ else:
 # Version bump.
 with open(path("versions.json")) as f:
     versions = json.load(f)
-versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.3")
+versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.4")
 with open(path("versions.json"), "w") as f:
     json.dump(versions, f, indent=4)
 print(f"[patch] versions.json app = {versions['app']}")
+
+# ---------------------------------------------------------------- 4d. links: staticgram.top (Android parity)
+# Generate/show staticgram.top; only staticgram.top resolves in-app; t.me/telegram.me/telegram.dog go to real Telegram.
+SG_DOMAIN = "staticgram.top"
+replace("submodules/UrlHandling/Sources/UrlHandling.swift",
+        '    "telegram.me",\n    "t.me", "telegram.dog", "staticgram.top", "www.staticgram.top"\n]',
+        '    "staticgram.top", "www.staticgram.top"\n]')
+replace("submodules/TelegramUI/Sources/OpenUrl.swift",
+        'private let telegramMeHosts: [String] = ["t.me", "telegram.me", "telegram.dog", "staticgram.top", "www.staticgram.top"]',
+        'private let telegramMeHosts: [String] = ["staticgram.top", "www.staticgram.top"]')
+replace("submodules/TelegramUI/Sources/OpenUrl.swift",
+        "        if let host = parsedUrl.host, telegramMeHosts.contains(host) {\n            handleInternalUrl(parsedUrl.absoluteString)\n        } else {",
+        "        if let sgHost = parsedUrl.host?.lowercased(), sgHost == \"t.me\" || sgHost == \"telegram.me\" || sgHost == \"telegram.dog\" || sgHost.hasSuffix(\".t.me\") {\n"
+        "            // StaticGram: real Telegram links belong to the official app\n"
+        "            context.sharedContext.applicationBindings.openUrl(originalUrl)\n"
+        "        } else if let host = parsedUrl.host?.lowercased(), telegramMeHosts.contains(host) {\n            handleInternalUrl(parsedUrl.absoluteString)\n        } else {")
+for rel in ["submodules/TextFormat/Sources/GenerateTextEntities.swift", "submodules/UrlWhitelist/Sources/UrlWhitelist.swift"]:
+    replace(rel, '    "t.me",\n    "telegram.me",\n', '    "t.me",\n    "telegram.me",\n    "staticgram.top",\n')
+replace("submodules/TelegramCore/Sources/TelegramEngine/Peers/ChatFolders.swift",
+        '        if slug.hasPrefix("https://t.me/addlist/") {',
+        '        if slug.hasPrefix("https://staticgram.top/addlist/") {\n'
+        '            slug = String(slug.dropFirst("https://staticgram.top/addlist/".count))\n'
+        '        }\n'
+        '        if slug.hasPrefix("https://t.me/addlist/") {')
+
+# fragment.com usernames / gifts -> staticgram.top (in-app)
+replace("submodules/SettingsUI/Sources/UsernameSetupController.swift",
+        'url: "https://fragment.com/username/\\(username)", forceExternal: true,',
+        'url: "https://staticgram.top/\\(username)", forceExternal: false,')
+replace("submodules/SettingsUI/Sources/UsernameSetupController.swift",
+        'url: "https://fragment.com/", forceExternal: true,',
+        'url: "https://docs.staticgram.top/faq", forceExternal: true,')
+replace("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftViewScreen.swift",
+        'url: "https://fragment.com/gift/\\(gift.slug)", forceExternal: true,',
+        'url: "https://staticgram.top/nft/\\(gift.slug)", forceExternal: false,')
+replace("submodules/TelegramUI/Components/PeerInfo/PeerInfoVisualMediaPaneNode/Sources/PeerInfoGiftsPaneNode.swift",
+        'url: "https://fragment.com/gift/\\(uniqueGift.slug)", forceExternal: true,',
+        'url: "https://staticgram.top/nft/\\(uniqueGift.slug)", forceExternal: false,')
+
+GEN_SKIP = {"submodules/TelegramUI/Sources/OpenUrl.swift",
+            "submodules/TelegramCore/Sources/TelegramEngine/Peers/ChatFolders.swift"}
+prefix_re = re.compile(r'([\w$.]+)\.hasPrefix\("((?:https://)?t\.me/[^"]*)"\)')
+hosteq_re = re.compile(r'([\w$.?]+(?:\.lowercased\(\))?) == "t\.me"')
+gen_count = parse_count = 0
+for dirpath, dirnames, files in os.walk(path("submodules")):
+    if "/Tests" in dirpath or "TelegramApi" in dirpath:
+        continue
+    for fn in files:
+        if not (fn.endswith(".swift") or fn.endswith(".m")):
+            continue
+        fp = os.path.join(dirpath, fn)
+        rel = os.path.relpath(fp, ROOT)
+        if rel in GEN_SKIP:
+            continue
+        with open(fp, encoding="utf-8") as f:
+            text = f.read()
+        if "t.me" not in text:
+            continue
+        out = []
+        for line in text.split("\n"):
+            if "t.me" in line and not "ChatControllerOpenLinkContextMenu" in rel:
+                if ".hasPrefix(" in line and prefix_re.search(line):
+                    line = prefix_re.sub(lambda m: f'({m.group(1)}.hasPrefix("{m.group(2)}") || {m.group(1)}.hasPrefix("{m.group(2).replace("t.me/", SG_DOMAIN + "/")}"))', line)
+                    parse_count += 1
+                elif hosteq_re.search(line):
+                    line = hosteq_re.sub(lambda m: f'({m.group(1)} == "t.me" || {m.group(1)} == "{SG_DOMAIN}")', line)
+                    parse_count += 1
+                else:
+                    new_line = line.replace('://t.me/', '://' + SG_DOMAIN + '/').replace('"t.me/', '"' + SG_DOMAIN + '/')
+                    if new_line != line:
+                        gen_count += 1
+                    line = new_line
+            out.append(line)
+        new_text = "\n".join(out)
+        if new_text != text:
+            with open(fp, "w", encoding="utf-8") as f:
+                f.write(new_text)
+print(f"[patch] links: {gen_count} generated -> {SG_DOMAIN}, {parse_count} matchers extended")
+if gen_count < 50:
+    sys.exit("[patch] links: too few replacements, upstream changed?")
 
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
