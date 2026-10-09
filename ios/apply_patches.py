@@ -136,7 +136,7 @@ with open(os.path.join(icon_dir, "icon.json"), "w") as f:
 print("[patch] Telegram.icon replaced")
 
 # ---------------------------------------------------------------- 4b. GRAM (currency TON) payments
-SG_TOPUP_URL = "https://t.me/StaticGramAuthBot?start=gram"  # bot lives on real Telegram -> open externally
+SG_TOPUP_URL = "https://t\" + \".me/StaticGramAuthBot?start=gram"  # bot lives on real Telegram -> open externally; split so the link rewrite below keeps t.me
 SG_RU = 'environment.strings.baseLanguageCode == "ru"'
 
 # Route TON invoices to the stars-style sheet backed by the TON (GRAM) balance.
@@ -328,7 +328,7 @@ else:
 # Version bump.
 with open(path("versions.json")) as f:
     versions = json.load(f)
-versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.4")
+versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.5")
 with open(path("versions.json"), "w") as f:
     json.dump(versions, f, indent=4)
 print(f"[patch] versions.json app = {versions['app']}")
