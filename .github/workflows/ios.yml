@@ -114,6 +114,7 @@ jobs:
             --cacheDir="$HOME/telegram-bazel-cache" \
             --overrideXcodeVersion \
             build \
+            --continueOnError \
             --configurationPath="$PWD/build-input/sg-configuration.json" \
             --codesigningInformationPath="$PWD/sg-codesigning" \
             --buildNumber=$((30000 + ${{ github.run_number }})) \
