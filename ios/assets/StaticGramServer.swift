@@ -315,7 +315,7 @@ func sgApplyServerIp(_ ip: String, context: MTContext) {
     let allowedKeys = Set(fresh.map(sgAddressKey))
 
     var current: [Int: [String]] = [:]
-    context.enumerateAddressSetsForDatacenters { datacenterId, addressSet, _ in
+    context.enumerateAddressSets(forDatacenters: { datacenterId, addressSet, _ in
         var keys: [String] = []
         if let list = addressSet.addressList {
             for item in list {
@@ -325,7 +325,7 @@ func sgApplyServerIp(_ ip: String, context: MTContext) {
             }
         }
         current[datacenterId] = keys
-    }
+    })
     var ids = Set<Int>([1, 2, 3, 4, 5])
     for id in current.keys {
         ids.insert(id)
