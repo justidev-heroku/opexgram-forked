@@ -66,10 +66,9 @@ jobs:
 
       - name: Apply StaticGram patches
         env:
-          SG_SERVER_HOST: ${{ secrets.SG_SERVER_HOST }}
+          # Server address is dynamic (dc.staticgram.top + reserve IPs), see ios/assets/StaticGramServer.swift
           SG_SERVER_PORT: "2398"
         run: |
-          test -n "$SG_SERVER_HOST" || { echo "secret SG_SERVER_HOST is not set"; exit 1; }
           python3 sg/ios/apply_patches.py tg sg/ios
           cd tg && git status --short | head -40
 

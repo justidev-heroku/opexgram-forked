@@ -2,7 +2,10 @@
 """StaticGram iOS: patches applied on top of a clean TelegramMessenger/Telegram-iOS checkout.
 
 Usage: apply_patches.py <telegram-ios-root> <patches-dir>
-Env:   SG_SERVER_HOST (required), SG_SERVER_PORT (default 2398)
+Env:   SG_SERVER_PORT (default 2398), SG_APP_VERSION
+
+The server address is dynamic: dc.staticgram.top (system DNS, then DoH) plus
+baked-in reserve IPs, see assets/StaticGramServer.swift.
 
 Every replacement asserts the expected number of matches, so an upstream change
 fails the build loudly instead of silently producing a client that talks to Telegram.
@@ -15,11 +18,8 @@ import sys
 
 ROOT = os.path.abspath(sys.argv[1])
 PATCHES = os.path.abspath(sys.argv[2])
-HOST = os.environ["SG_SERVER_HOST"].strip()
 PORT = int(os.environ.get("SG_SERVER_PORT", "2398"))
 APP_NAME = "StaticGram"
-
-assert re.fullmatch(r"[0-9a-zA-Z.\-:]+", HOST), "bad SG_SERVER_HOST"
 
 
 def path(rel):
@@ -56,17 +56,30 @@ def sub(rel, pattern, new, count=1, flags=re.S):
 
 # ---------------------------------------------------------------- 1. server
 NET = "submodules/TelegramCore/Sources/Network/Network.swift"
-seed = ", ".join(f'{i}: ["{HOST}"]' for i in range(1, 6))
+# Resolver of dc.staticgram.top + reserve IPs (lives in TelegramCore, picked up by the glob).
+with open(os.path.join(PATCHES, "assets/StaticGramServer.swift"), encoding="utf-8") as f:
+    sg_server_swift = f.read()
+assert f"let sgServerPort: UInt16 = {PORT}\n" in sg_server_swift, "SG_SERVER_PORT differs from StaticGramServer.swift"
+write("submodules/TelegramCore/Sources/Network/StaticGramServer.swift", sg_server_swift)
+print("[patch] TelegramCore/Sources/Network/StaticGramServer.swift added")
+seed = ", ".join(f"{i}: sgServerFallbackIps" for i in range(1, 6))
 sub(NET,
     r"let seedAddressList: \[Int: \[String\]\]\s*\n\s*if testingEnvironment \{.*?\n\s*\}\s*else\s*\{.*?\n\s*\]\s*\n\s*\}",
-    f"// StaticGram: every datacenter lives on our server\n            let seedAddressList: [Int: [String]] = [{seed}]")
+    f"// StaticGram: every datacenter lives on our server (reserve IPs; dc.staticgram.top is resolved at runtime)\n            let seedAddressList: [Int: [String]] = [{seed}]")
 replace(NET,
         "MTDatacenterAddress(ip: $0, port: 443, preferForMedia: false",
         f"MTDatacenterAddress(ip: $0, port: {PORT}, preferForMedia: false")
 # No backup-IP discovery (DNS-over-HTTPS / Firebase lookups of Telegram's own DCs).
 sub(NET,
     r"\n(\s*)context\.setDiscoverBackupAddressListSignal\(MTBackupAddressSignals\.fetchBackupIps\([^\n]*\)\)\n",
-    "\n                // StaticGram: backup address discovery disabled (it resolves Telegram's servers)\n                let _ = wrappedAdditionalSource\n")
+    "\n                // StaticGram: backup address discovery = re-resolve dc.staticgram.top (Telegram's own lookup is not used)\n"
+    "                let _ = wrappedAdditionalSource\n"
+    "                context.setDiscoverBackupAddressListSignal(sgServerDiscoverySignal(context: context))\n"
+    "                sgStartInitialServerResolve(context: context)\n")
+# help.getConfig dc_options: a resolved dc.staticgram.top address wins over the advertised one.
+replace("submodules/TelegramCore/Sources/State/ManagedConfigurationUpdates.swift",
+        "addressList[Int(id)]!.append(MTDatacenterAddress(ip: ipAddress, port: UInt16(port),",
+        "addressList[Int(id)]!.append(MTDatacenterAddress(ip: sgConfigServerIp(ipAddress, isCdn: isCdn), port: UInt16(port),")
 
 # ---------------------------------------------------------------- 2. RSA
 with open(os.path.join(PATCHES, "assets/server_rsa.pub"), encoding="ascii") as f:
@@ -328,7 +341,7 @@ else:
 # Version bump.
 with open(path("versions.json")) as f:
     versions = json.load(f)
-versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.5")
+versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.6")
 with open(path("versions.json"), "w") as f:
     json.dump(versions, f, indent=4)
 print(f"[patch] versions.json app = {versions['app']}")
