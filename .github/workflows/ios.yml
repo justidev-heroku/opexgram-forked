@@ -14,6 +14,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: write # drop previous Bazel caches (keep exactly one, 10 GB repo limit)
 
 env:
   TG_TAG: release-12.9.2
@@ -121,8 +122,21 @@ jobs:
             --outputBuildArtifactsPath="$PWD/build/artifacts"
           ls -la build/artifacts
 
+      - name: Drop previous Bazel caches
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Each run saves under a new key; keep only the one saved below.
+          gh cache list --repo "$GITHUB_REPOSITORY" --key sg-ios-bazel- --limit 100 --json key --jq '.[].key' |
+          while read -r key; do
+            [ -n "$key" ] || continue
+            echo "delete cache $key"
+            gh cache delete "$key" --repo "$GITHUB_REPOSITORY" || true
+          done
+
       - name: Save Bazel cache
-        if: always()
+        if: success()
         uses: actions/cache/save@v4
         with:
           path: ~/telegram-bazel-cache
