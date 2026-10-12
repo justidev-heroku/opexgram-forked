@@ -198,6 +198,7 @@ private:
 	ConnectionPointer _connection;
 	std::vector<TestConnection> _testConnections;
 	crl::time _startedConnectingAt = 0;
+	int _failedConnectAttempts = 0;
 
 	base::Timer _retryTimer; // exp retry timer
 	int _retryTimeout = 1;

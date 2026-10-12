@@ -387,9 +387,10 @@ void Instance::Private::start() {
 	Assert(!hasMainDcId() == isKeysDestroyer());
 	requestConfig();
 
-	// StaticGram: sessions above already connect to the baked-in IP; the
-	// server domain is resolved asynchronously and, if it differs, the
-	// built-in DCs are moved over (dcOptions().changed() -> reconnect).
+	// StaticGram: sessions above already try the baked-in reserve IPs (and
+	// any saved address); the server domain is resolved asynchronously and
+	// replaces them (dcOptions().changed() -> reconnect). Sessions ask for a
+	// new lookup after repeated connect failures (SessionPrivate).
 	if (!isKeysDestroyer()) {
 		dcOptions().startBuiltInServerLookup(_instance);
 	}

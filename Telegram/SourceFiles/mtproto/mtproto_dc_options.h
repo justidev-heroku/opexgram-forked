@@ -85,11 +85,16 @@ public:
 	void addFromOther(DcOptions &&options);
 
 	// StaticGram: resolve the server domain in the background (never
-	// blocking) and move built-in endpoints still on the baked-in IP to the
-	// resolved one, firing changed() for the affected DCs. The result is
-	// delivered on the context's thread and dropped if the context is gone,
-	// so this object must stay alive while the context can process events.
+	// blocking; system DNS, then DNS-over-HTTPS) and point every regular
+	// IPv4 endpoint at the resolved address, firing changed() for the
+	// affected DCs. The result is delivered on the context's thread and
+	// dropped if the context is gone, so this object must stay alive while
+	// the context can process events. Main thread only.
 	void startBuiltInServerLookup(not_null<QObject*> context);
+
+	// StaticGram: called after repeated connect failures; debounced. If DNS
+	// gives nothing new, the baked-in reserve IPs are re-added.
+	void reresolveBuiltInServer(not_null<QObject*> context);
 
 	[[nodiscard]] std::vector<DcId> configEnumDcIds() const;
 
@@ -147,7 +152,11 @@ private:
 	void computeCdnDcIds();
 
 	void readBuiltInPublicKeys();
-	void applyResolvedBuiltInServerIp(const std::string &ip);
+	void startServerLookup(not_null<QObject*> context, bool afterFailures);
+	void startDohServerLookup(
+		not_null<QObject*> context,
+		bool afterFailures);
+	void finishServerLookup(const std::string &ip, bool afterFailures);
 
 	class WriteLocker;
 	friend class WriteLocker;
@@ -169,6 +178,10 @@ private:
 
 	// True when we have overriden options from a .tdesktop-endpoints file.
 	bool _immutable = false;
+
+	// StaticGram server lookup state, main thread only.
+	bool _serverLookupRunning = false;
+	qint64 _serverLookupStartedAt = 0;
 
 };
 

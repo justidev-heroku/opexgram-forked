@@ -48,6 +48,7 @@ constexpr auto kFastRequestDuration = crl::time(500);
 
 // If we can't connect for this time we will ask _instance to update config.
 constexpr auto kRequestConfigTimeout = 8 * crl::time(1000);
+constexpr auto kReresolveServerAfterFailures = 3;
 
 // Don't try to handle messages larger than this size.
 constexpr auto kMaxMessageLength = 16 * 1024 * 1024;
@@ -1099,10 +1100,27 @@ void SessionPrivate::connectToServer(bool afterConfig) {
 
 	if (!_startedConnectingAt) {
 		_startedConnectingAt = crl::now();
-	} else if (crl::now() - _startedConnectingAt > kRequestConfigTimeout) {
-		InvokeQueued(_instance, [instance = _instance] {
-			instance->requestConfigIfOld();
-		});
+		_failedConnectAttempts = 0;
+	} else {
+		if (crl::now() - _startedConnectingAt > kRequestConfigTimeout) {
+			InvokeQueued(_instance, [instance = _instance] {
+				instance->requestConfigIfOld();
+			});
+		}
+		// StaticGram: the server may have moved, ask DcOptions to resolve
+		// dc.staticgram.top again (debounced there) after repeated failures.
+		const auto regular = (_currentDcType != DcType::Cdn)
+			&& (_currentDcType != DcType::Temporary)
+			&& (_options->proxy.type != ProxyData::Type::Mtproto)
+			&& (_options->proxy.type != ProxyData::Type::Web);
+		if (regular
+			&& ++_failedConnectAttempts >= kReresolveServerAfterFailures) {
+			InvokeQueued(_instance, [instance = _instance] {
+				if (!instance->isKeysDestroyer()) {
+					instance->dcOptions().reresolveBuiltInServer(instance);
+				}
+			});
+		}
 	}
 
 	_retryTimer.cancel();
