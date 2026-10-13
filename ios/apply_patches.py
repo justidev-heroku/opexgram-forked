@@ -519,6 +519,23 @@ write(GOS, read(GOS).rstrip("\n") + "\n\n"
       "}\n")
 print(f"[patch] {GOS}: resale tile helpers appended")
 
+# ---------------------------------------------------------------- 4f. energy saving: battery threshold slider draggable on iOS < 26
+# On iOS < 26 SliderComponent falls back to TGPhotoEditorSliderView with enablePanHandling = true: the
+# knob only starts tracking once its own UIPanGestureRecognizer begins, so inside a ListView the list
+# scroller pan (ListViewScroller only yields to a UIControl that isTracking) can win the race; this
+# continuous slider has no tap fallback, so it may not move at all (reported on iPhone XR). Use
+# UIControl touch tracking (isTracking from touch-down, the scroller yields) plus edge taps (left edge = Off).
+BATT = "submodules/SettingsUI/Sources/Data and Storage/EnergyUsageBatteryLevelItem.swift"
+replace(BATT, "import SliderComponent\n", "import SliderComponent\nimport LegacyComponents\n")
+replace(BATT,
+        "                        sliderView.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((params.width - sliderSize.width) / 2.0), y: 36.0 + verticalInset), size: sliderSize)\n",
+        "                        sliderView.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((params.width - sliderSize.width) / 2.0), y: 36.0 + verticalInset), size: sliderSize)\n"
+        "                        // StaticGram: legacy slider (iOS < 26) tracks touches directly so the list pan cannot steal the drag\n"
+        "                        if let sgLegacySlider = (sliderView as? SliderComponent.View)?.hitTestTarget as? TGPhotoEditorSliderView, sgLegacySlider.enablePanHandling {\n"
+        "                            sgLegacySlider.enablePanHandling = false\n"
+        "                            sgLegacySlider.enableEdgeTap = true\n"
+        "                        }\n")
+
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
     f.write("\n# StaticGram CI\n"
