@@ -536,6 +536,20 @@ replace(BATT,
         "                            sgLegacySlider.enableEdgeTap = true\n"
         "                        }\n")
 
+# ---------------------------------------------------------------- 4g. reply panel: no ghost text line on iOS < 26
+# The reply/forward/edit accessory panel renders the text twice: the visible `text` (with
+# textRenderInsets 2pt) and `tintText`, a black copy used as a luminance mask on the legacy
+# GlassBackgroundView foreground (iOS < 26). The mask copy had no insets but sits at the same
+# origin, so the cut-out was 2pt off the visible text -> doubled ("ghost") line (iPhone XR).
+# Give the mask copy the same insets. The title has no mask copy.
+CIMAP = "submodules/TelegramUI/Components/Chat/ChatInputMessageAccessoryPanel/Sources/ChatInputMessageAccessoryPanel.swift"
+replace(CIMAP,
+        "                    text: .plain(tintTextString),\n"
+        "                )),\n",
+        "                    text: .plain(tintTextString),\n"
+        "                    insets: textRenderInsets\n"
+        "                )),\n")
+
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
     f.write("\n# StaticGram CI\n"
