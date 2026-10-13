@@ -426,6 +426,99 @@ print(f"[patch] links: {gen_count} generated -> {SG_DOMAIN}, {parse_count} match
 if gen_count < 50:
     sys.exit("[patch] links: too few replacements, upstream changed?")
 
+# ---------------------------------------------------------------- 4e. gift picker: resale tile (Android parity)
+# A limited gift that is still in stock but has resale lots gets a second tile right after the
+# normal one (Android GiftSheet): green "resale" ribbon, "# N+" from resell_min_stars, tap opens
+# the resale market, exactly like a sold-out gift with resale. The original tile is unchanged.
+GOS = "submodules/TelegramUI/Components/Gifts/GiftOptionsScreen/Sources/GiftOptionsScreen.swift"
+replace(GOS,
+        "                for gift in starGifts {\n"
+        "                    var isVisible = false\n",
+        "                for (gift, sgIsResaleTile) in sgExpandResaleTiles(starGifts) {\n"
+        "                    var isVisible = false\n")
+replace(GOS,
+        "                        let itemId = AnyHashable(gift.id)\n"
+        "                        validIds.append(itemId)\n",
+        "                        // StaticGram: the extra resale tile gets its own id (String, never equal to an Int64 gift id)\n"
+        "                        let itemId = sgIsResaleTile ? AnyHashable(\"sgResale_\\(gift.id)\") : AnyHashable(gift.id)\n"
+        "                        validIds.append(itemId)\n")
+replace(GOS,
+        "                        var lockedUntilDate: Int32?\n"
+        "                        let subject: GiftItemComponent.Subject\n",
+        "                        if sgIsResaleTile {\n"
+        "                            // StaticGram: styled like the sold-out resale tile\n"
+        "                            ribbon = GiftItemComponent.Ribbon(\n"
+        "                                text: environment.strings.Gift_Options_Gift_Resale,\n"
+        "                                color: .green\n"
+        "                            )\n"
+        "                            outline = nil\n"
+        "                            isSoldOut = true\n"
+        "                            isLoading = false\n"
+        "                        }\n"
+        "                        var lockedUntilDate: Int32?\n"
+        "                        let subject: GiftItemComponent.Subject\n")
+replace(GOS,
+        "} else if let availability = gift.availability, availability.remains == 0, availability.resale > 0, let minResaleStars = availability.minResaleStars {",
+        "} else if let availability = gift.availability, availability.remains == 0 || sgIsResaleTile, availability.resale > 0, let minResaleStars = availability.minResaleStars {")
+replace(GOS,
+        "                                        self.openGift(gift: gift)\n"
+        "                                    },\n",
+        "                                        if sgIsResaleTile {\n"
+        "                                            self.sgOpenResaleMarket(gift: gift)\n"
+        "                                        } else {\n"
+        "                                            self.openGift(gift: gift)\n"
+        "                                        }\n"
+        "                                    },\n")
+replace(GOS,
+        "        private func openGift(gift: StarGift, skipDateCheck: Bool = false) {\n",
+        "        // StaticGram: same resale market screen a sold-out gift with resale opens\n"
+        "        private func sgOpenResaleMarket(gift: StarGift) {\n"
+        "            guard let component = self.component, let environment = self.environment, case let .generic(sgGift) = gift else {\n"
+        "                return\n"
+        "            }\n"
+        "            guard let controller = environment.controller() as? GiftOptionsScreen else {\n"
+        "                return\n"
+        "            }\n"
+        "            let mainController: ViewController\n"
+        "            if let parentController = controller.parentController() {\n"
+        "                mainController = parentController\n"
+        "            } else {\n"
+        "                mainController = controller\n"
+        "            }\n"
+        "            let storeController = component.context.sharedContext.makeGiftStoreController(\n"
+        "                context: component.context,\n"
+        "                peerId: component.peerId,\n"
+        "                gift: sgGift\n"
+        "            )\n"
+        "            mainController.push(storeController)\n"
+        "        }\n"
+        "\n"
+        "        private func openGift(gift: StarGift, skipDateCheck: Bool = false) {\n")
+replace(GOS,
+        "contentHeight += ceil(CGFloat(starGifts.count) / 3.0) * (starsOptionSize.height + optionSpacing)",
+        "contentHeight += ceil(CGFloat(sgExpandResaleTiles(starGifts).count) / 3.0) * (starsOptionSize.height + optionSpacing)")
+write(GOS, read(GOS).rstrip("\n") + "\n\n"
+      "// StaticGram: limited gift still in stock with resale lots -> extra resale tile (Android GiftSheet parity)\n"
+      "private func sgHasResaleTile(_ gift: StarGift) -> Bool {\n"
+      "    if case let .generic(gift) = gift, gift.soldOut == nil, !gift.flags.contains(.isAuction), let availability = gift.availability, availability.remains > 0, availability.resale > 0, availability.minResaleStars != nil {\n"
+      "        return true\n"
+      "    }\n"
+      "    return false\n"
+      "}\n"
+      "\n"
+      "private func sgExpandResaleTiles(_ gifts: [StarGift]) -> [(StarGift, Bool)] {\n"
+      "    var result: [(StarGift, Bool)] = []\n"
+      "    result.reserveCapacity(gifts.count)\n"
+      "    for gift in gifts {\n"
+      "        result.append((gift, false))\n"
+      "        if sgHasResaleTile(gift) {\n"
+      "            result.append((gift, true))\n"
+      "        }\n"
+      "    }\n"
+      "    return result\n"
+      "}\n")
+print(f"[patch] {GOS}: resale tile helpers appended")
+
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
     f.write("\n# StaticGram CI\n"
