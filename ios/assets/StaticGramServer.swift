@@ -17,7 +17,7 @@ import MtProtoKit
 
 let sgServerHost = "dc.staticgram.top"
 let sgServerPort: UInt16 = 2398
-let sgServerFallbackIps: [String] = ["185.246.223.47", "13.143.160.46"]
+let sgServerFallbackIps: [String] = ["185.246.223.47"]
 
 private let sgDnsTimeout: Double = 5.0
 private let sgReresolveDebounce: Double = 30.0
@@ -302,12 +302,15 @@ func sgApplyServerIp(_ ip: String, context: MTContext) {
         state.resolvedIp = ip
         return state
     }
-    var ips: [String] = [ip]
+    // MTContext picks the candidate scanning the list from the end (equal
+    // failure times), so the resolved address goes last = tried first.
+    var ips: [String] = []
     for fallback in sgServerFallbackIps {
-        if !ips.contains(fallback) {
+        if fallback != ip && !ips.contains(fallback) {
             ips.append(fallback)
         }
     }
+    ips.append(ip)
     let fresh: [MTDatacenterAddress] = ips.map { value -> MTDatacenterAddress in
         return MTDatacenterAddress(ip: value, port: sgServerPort, preferForMedia: false, restrictToTcp: false, cdn: false, preferForProxy: false, secret: nil)
     }
@@ -332,7 +335,9 @@ func sgApplyServerIp(_ ip: String, context: MTContext) {
     }
     var updated: [Int] = []
     for id in ids.sorted() {
-        if let keys = current[id], keys.contains(resolvedKey), keys.allSatisfy({ allowedKeys.contains($0) }) {
+        // Up to date only if nothing outside the allowed set (e.g. a dead
+        // reserve IP from an older build) and the resolved address is last.
+        if let keys = current[id], keys.last == resolvedKey, keys.allSatisfy({ allowedKeys.contains($0) }) {
             continue
         }
         updated.append(id)
