@@ -550,6 +550,37 @@ replace(CIMAP,
         "                    insets: textRenderInsets\n"
         "                )),\n")
 
+# ---------------------------------------------------------------- 4h. gift upgrade: skip shows the real backdrop/symbol
+# After an upgrade the header renders .unique(previewAttributes, gift) and, while previewBackdropIndex /
+# previewPatternIndex != -1, overrides the real gift's backdrop/pattern with a random preview one. The
+# indices were reset to -1 only in tick() in the .spinning state; skipAnimation() reveals backdrop, pattern
+# and model at once, revealing the model switches the spinner to .decelerating, so the reset never ran
+# and the last random backdrop (and sometimes symbol) stayed. Reset them as soon as they are revealed.
+GCC = "submodules/TelegramUI/Components/Gifts/GiftAnimationComponent/Sources/GiftCompositionComponent.swift"
+replace(GCC,
+        "                if let previewAttributes = previewAttributesOpt, !previewAttributes.isEmpty {\n"
+        "                    if self.previewPatternIndex != -1, case let .pattern(_, file, _) = self.previewPatterns[Int(self.previewPatternIndex)] {\n",
+        "                if let previewAttributes = previewAttributesOpt, !previewAttributes.isEmpty {\n"
+        "                    // StaticGram: revealed attributes always show the real gift (skip path never reaches tick() .spinning)\n"
+        "                    if component.revealedAttributes.contains(.pattern) {\n"
+        "                        self.previewPatternIndex = -1\n"
+        "                    }\n"
+        "                    if component.revealedAttributes.contains(.backdrop) {\n"
+        "                        self.previewBackdropIndex = -1\n"
+        "                    }\n"
+        "                    if self.previewPatternIndex != -1, case let .pattern(_, file, _) = self.previewPatterns[Int(self.previewPatternIndex)] {\n")
+
+# ---------------------------------------------------------------- 4i. chat bubble: author name tap is not stolen by the emoji status
+# The emoji-status button sat right after the name with insetBy(dx: -2, dy: -3): it started 1pt inside the
+# name button (name button = name frame inset -2) and was taller than it, so taps on the end of the
+# author name opened the "This is X's status from <pack>" sheet instead of the profile.
+# Tap target of the status = the icon's own frame (starts 3pt after the name, no overlap).
+BUBBLE = "submodules/TelegramUI/Components/Chat/ChatMessageBubbleItemNode/Sources/ChatMessageBubbleItemNode.swift"
+replace(BUBBLE,
+        "                credibilityButtonNode.frame = credibilityIconFrame.insetBy(dx: -2.0, dy: -3.0)\n",
+        "                // StaticGram: status tap target = icon frame only, never over the author name\n"
+        "                credibilityButtonNode.frame = credibilityIconFrame\n")
+
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
     f.write("\n# StaticGram CI\n"
