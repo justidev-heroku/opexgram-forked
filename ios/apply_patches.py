@@ -170,6 +170,24 @@ print(f"[patch] {APP_NAME}.icon created (Telegram.icon removed)")
 shutil.copyfile(os.path.join(PATCHES, "assets/ShortcutLogo.pdf"),
                 path("Telegram/Telegram-iOS/Icons.xcassets/Shortcuts/AppIcon.imageset/tlogo_24.pdf"))
 
+# Start screen (RMIntro, OpenGL, page 0): blue "sphere" + white Telegram plane flying in ->
+# StaticGram tile (red gradient rounded square) + white glyph flying in. Textures are loaded via
+# UIImage(named:) from Telegram-iOS/Resources/intro (only CGImage pixels are used, so 3x-res @2x files are fine).
+for fn in ("telegram_sphere@2x.png", "telegram_plane1@2x.png"):
+    dst = path(f"Telegram/Telegram-iOS/Resources/intro/{fn}")
+    assert os.path.isfile(dst), dst
+    shutil.copyfile(os.path.join(PATCHES, "assets/intro", fn), dst)
+INTRO = "submodules/RMIntro/Sources/core/animations.c"
+# glyph rect 92x76pt (aspect of our logo, 0.62 of the 148pt tile like StaticGram.icon); no optical offset (plane-specific)
+replace(INTRO,
+        "    telegram_plane = create_textured_rectangle(CSizeMake(82, 74), telegram_plane_texture);\n"
+        "    telegram_plane.params.anchor=xyzMake(6, -5, 0);\n",
+        "    telegram_plane = create_textured_rectangle(CSizeMake(92, 76), telegram_plane_texture);\n"
+        "    telegram_plane.params.anchor=xyzMake(0, 0, 0);\n")
+replace("Telegram/Telegram-iOS/en.lproj/Localizable.strings",
+        '"Tour.Title1" = "Telegram";\n', f'"Tour.Title1" = "{APP_NAME}";\n')
+print("[patch] intro: StaticGram tile + glyph, title")
+
 # ---------------------------------------------------------------- 4b. GRAM (currency TON) payments
 SG_TOPUP_URL = "https://t\" + \".me/StaticGramAuthBot?start=gram"  # bot lives on real Telegram -> open externally; split so the link rewrite below keeps t.me
 SG_RU = 'environment.strings.baseLanguageCode == "ru"'
