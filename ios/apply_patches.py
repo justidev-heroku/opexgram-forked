@@ -133,27 +133,42 @@ replace(BUILD,
         f'ios_application(\n    name = "Telegram",\n    executable_name = "{APP_NAME}",\n    bundle_id = "{{telegram_bundle_id}}".format(\n')
 assert read(BUILD).count("executable_name =") == 1, "executable_name: unexpected count"
 
-# App icon: Icon Composer bundle with a single opaque PNG layer.
-icon_dir = path("Telegram/Telegram-iOS/Telegram.icon")
-shutil.rmtree(icon_dir)
+# App icon: Icon Composer bundle StaticGram.icon (Swiftgram-style): red gradient fill + one white glass glyph.
+# iOS 26 builds system UI (BGContinuedProcessingTask Live Activity pill etc.) from it: colour = fill,
+# symbol = glyph layer, caption = icon name (CFBundleIconName = .icon folder name in rules_apple).
+shutil.rmtree(path("Telegram/Telegram-iOS/Telegram.icon"))
+icon_dir = path(f"Telegram/Telegram-iOS/{APP_NAME}.icon")
 os.makedirs(os.path.join(icon_dir, "Assets"))
-shutil.copyfile(os.path.join(PATCHES, "assets/AppIcon.png"), os.path.join(icon_dir, "Assets/AppIcon.png"))
+shutil.copyfile(os.path.join(PATCHES, "assets/StaticGramLogo.svg"), os.path.join(icon_dir, "Assets/StaticGramLogo.svg"))
 with open(os.path.join(icon_dir, "icon.json"), "w") as f:
     json.dump({
-        "fill": "system-light",
+        "fill": {
+            "linear-gradient": [
+                "srgb:1.00000,0.36078,0.41569,1.00000",
+                "srgb:0.87843,0.03922,0.15686,1.00000",
+            ],
+            "orientation": {"start": {"x": 0.5, "y": 0}, "stop": {"x": 0.5, "y": 0.7}},
+        },
         "groups": [{
             "layers": [{
-                "glass": False,
-                "image-name": "AppIcon.png",
-                "name": "AppIcon",
+                "blend-mode-specializations": [{"value": "normal"}, {"appearance": "dark", "value": "normal"}],
+                "fill-specializations": [{"value": "automatic"}, {"appearance": "dark", "value": "none"}],
+                "glass": True,
+                "image-name": "StaticGramLogo.svg",
+                "name": "StaticGramLogo",
+                "opacity-specializations": [{"value": 1}, {"appearance": "dark", "value": 0.9}],
             }],
-            "shadow": {"kind": "none", "opacity": 0},
-            "specular": False,
-            "translucency": {"enabled": False, "value": 0},
+            "shadow": {"kind": "neutral", "opacity": 0.5},
+            "translucency": {"enabled": True, "value": 0.5},
         }],
-        "supported-platforms": {"squares": "shared"},
+        "supported-platforms": {"circles": ["watchOS"], "squares": "shared"},
     }, f, indent=2)
-print("[patch] Telegram.icon replaced")
+replace(BUILD, 'composer_icon_folders = ["Telegram"]\n', f'composer_icon_folders = ["{APP_NAME}"]\n')
+print(f"[patch] {APP_NAME}.icon created (Telegram.icon removed)")
+
+# Home-screen quick action icon (template, alpha only): Telegram plane -> StaticGram glyph.
+shutil.copyfile(os.path.join(PATCHES, "assets/ShortcutLogo.pdf"),
+                path("Telegram/Telegram-iOS/Icons.xcassets/Shortcuts/AppIcon.imageset/tlogo_24.pdf"))
 
 # ---------------------------------------------------------------- 4b. GRAM (currency TON) payments
 SG_TOPUP_URL = "https://t\" + \".me/StaticGramAuthBot?start=gram"  # bot lives on real Telegram -> open externally; split so the link rewrite below keeps t.me
@@ -323,7 +338,7 @@ for name in sorted(os.listdir(lproj_dir)):
 # Alternate / legacy icon PNGs -> our icon (macOS sips; skipped elsewhere).
 if shutil.which("sips"):
     import subprocess
-    src_icon = os.path.join(PATCHES, "assets/AppIcon.png")
+    src_icon = os.path.join(PATCHES, "assets/StaticGramIcon1024.png")  # same look as StaticGram.icon (white glyph on red)
     icon_count = 0
     for dirpath, _, files in os.walk(lproj_dir):
         rel_dir = os.path.relpath(dirpath, lproj_dir)
@@ -348,7 +363,7 @@ else:
 # Version bump.
 with open(path("versions.json")) as f:
     versions = json.load(f)
-versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.8")
+versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.9")
 with open(path("versions.json"), "w") as f:
     json.dump(versions, f, indent=4)
 print(f"[patch] versions.json app = {versions['app']}")
