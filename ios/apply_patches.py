@@ -341,7 +341,7 @@ else:
 # Version bump.
 with open(path("versions.json")) as f:
     versions = json.load(f)
-versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.6")
+versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.7")
 with open(path("versions.json"), "w") as f:
     json.dump(versions, f, indent=4)
 print(f"[patch] versions.json app = {versions['app']}")
@@ -580,6 +580,29 @@ replace(BUBBLE,
         "                credibilityButtonNode.frame = credibilityIconFrame.insetBy(dx: -2.0, dy: -3.0)\n",
         "                // StaticGram: status tap target = icon frame only, never over the author name\n"
         "                credibilityButtonNode.frame = credibilityIconFrame\n")
+
+# ---------------------------------------------------------------- 4j. iOS system UI: StaticGram name + logo
+# CallKit banner / lock-screen call UI / Phone recents showed "TELEGRAM" and the paper plane.
+replace("submodules/TelegramCallsUI/Sources/CallKitIntegration.swift",
+        'CXProviderConfiguration(localizedName: "Telegram")',
+        f'CXProviderConfiguration(localizedName: "{APP_NAME}")')
+# iconTemplateImageData = Call/CallKitLogo: template (only alpha is used), 40x40pt, white logo on transparent.
+callkit_dir = path("submodules/TelegramUI/Images.xcassets/Call/CallKitLogo.imageset")
+with open(os.path.join(callkit_dir, "Contents.json")) as f:
+    callkit_files = sorted(i["filename"] for i in json.load(f)["images"] if "filename" in i)
+if callkit_files != ["CallKitLogo@2x.png", "CallKitLogo@3x.png"]:
+    sys.exit(f"[patch] CallKitLogo.imageset: unexpected files {callkit_files}")
+for fn in callkit_files:
+    shutil.copyfile(os.path.join(PATCHES, "assets", fn), os.path.join(callkit_dir, fn))
+print("[patch] CallKitLogo replaced")
+# Photos album for saved media.
+replace("submodules/TelegramUI/Sources/StoreDownloadedMedia.swift",
+        'let albumName = "Telegram"',
+        f'let albumName = "{APP_NAME}"')
+# Files app: theme file type description.
+replace(BUILD,
+        "<string>Telegram iOS Color Theme File</string>",
+        f"<string>{APP_NAME} iOS Color Theme File</string>")
 
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
