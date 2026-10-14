@@ -152,7 +152,9 @@ jobs:
           APP=Payload/$APP_NAME.app
           mv Payload/Telegram.app "$APP"
           rm -rf "$APP/PlugIns" "$APP/Watch" "$APP/Extensions" Symbols SwiftSupport
-          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" -c "Print :CFBundleDisplayName" -c "Print :CFBundleShortVersionString" -c "Print :CFBundleVersion" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" -c "Print :CFBundleDisplayName" -c "Print :CFBundleExecutable" -c "Print :CFBundleShortVersionString" -c "Print :CFBundleVersion" "$APP/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$APP/Info.plist")" = "$APP_NAME"
+          test -f "$APP/$APP_NAME"
           codesign -d --entitlements :- "$APP" 2>/dev/null | head -60 || true
           OUT="StaticGram-iOS-$VER-${{ github.run_number }}.ipa"
           zip -qry "../$OUT" Payload

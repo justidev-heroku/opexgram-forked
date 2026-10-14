@@ -126,6 +126,13 @@ for name in sorted(os.listdir(lproj_dir)):
                 f.write(new)
             print(f"[patch] {name}/InfoPlist.strings: localized app name removed")
 
+# Executable (CFBundleExecutable / process name) = StaticGram: iOS shows it in the status-bar
+# "return to app" pill. Bundle dir/ipa stay Telegram.app/Telegram.ipa (Make.py, ios.yml), bundle id unchanged.
+replace(BUILD,
+        'ios_application(\n    name = "Telegram",\n    bundle_id = "{telegram_bundle_id}".format(\n',
+        f'ios_application(\n    name = "Telegram",\n    executable_name = "{APP_NAME}",\n    bundle_id = "{{telegram_bundle_id}}".format(\n')
+assert read(BUILD).count("executable_name =") == 1, "executable_name: unexpected count"
+
 # App icon: Icon Composer bundle with a single opaque PNG layer.
 icon_dir = path("Telegram/Telegram-iOS/Telegram.icon")
 shutil.rmtree(icon_dir)
@@ -341,7 +348,7 @@ else:
 # Version bump.
 with open(path("versions.json")) as f:
     versions = json.load(f)
-versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.7")
+versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.8")
 with open(path("versions.json"), "w") as f:
     json.dump(versions, f, indent=4)
 print(f"[patch] versions.json app = {versions['app']}")
