@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- StaticGram: pre-Android-12 launch background (black, night) with the logo centered. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/black" />
+    <item
+        android:drawable="@drawable/staticgram_logo"
+        android:gravity="center"
+        android:width="96dp"
+        android:height="78dp" />
+</layer-list>
