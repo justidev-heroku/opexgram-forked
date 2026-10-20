@@ -18,7 +18,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QTimer>
 #include <QtCore/QUrl>
 #include <QtNetwork/QHostAddress>
-#include <QtNetwork/QHostInfo>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
@@ -45,11 +44,18 @@ struct BuiltInDc {
 // real multi-DC Telegram backend. Every dc_id below points at the same
 // server. Startup never blocks on DNS: the built-in DCs are built with the
 // baked-in reserve IPs (all of them are tried in parallel by the session),
-// and dc.staticgram.top is resolved asynchronously afterwards (system DNS,
-// then DNS-over-HTTPS). A resolved public IPv4 REPLACES every regular IPv4
-// endpoint, including ones saved from earlier dc_options, so the server can
-// move without a client rebuild. After several failed connects in a row the
-// lookup is repeated (debounced) and the reserve IPs are re-added.
+// and dc.staticgram.top is resolved asynchronously afterwards via
+// DNS-over-HTTPS only (not system DNS — that path is trivial to poison on
+// open Wi-Fi / rogue DHCP). A resolved public IPv4 REPLACES every regular
+// IPv4 endpoint, including ones saved from earlier dc_options, so the
+// server can move without a client rebuild. After several failed connects
+// in a row the lookup is repeated (debounced) and the reserve IPs are
+// re-added.
+//
+// Android already requires a signed TXT (_cfg.staticgram.top) before
+// applying candidates; desktop still lacks that verify and therefore only
+// mitigates local DNS spoofing here. Port native_sgVerifyCfgTxt-equivalent
+// before treating DoH A as fully trusted.
 constexpr auto kStaticGramServerHost = "dc.staticgram.top";
 constexpr auto kStaticGramServerPort = 2398;
 constexpr const char *kStaticGramServerFallbackIps[] = {
@@ -149,20 +155,6 @@ void RememberStaticGramServerIp(const std::string &ip) {
 		}
 	}
 	return address.toString().toStdString();
-}
-
-// Empty string if the lookup gave no usable IPv4 address.
-[[nodiscard]] std::string PickStaticGramServerIp(const QHostInfo &info) {
-	for (const auto &address : info.addresses()) {
-		if (address.protocol() != QAbstractSocket::IPv4Protocol) {
-			continue;
-		}
-		const auto ip = ValidStaticGramServerIp(address.toString());
-		if (!ip.empty()) {
-			return ip;
-		}
-	}
-	return {};
 }
 
 [[nodiscard]] bool IsStaticGramServerEndpoint(
@@ -581,27 +573,14 @@ void DcOptions::startServerLookup(
 	_serverLookupRunning = true;
 	_serverLookupStartedAt = crl::now();
 
-	// Asynchronous: the result is delivered later on the context's thread
-	// (the main thread for MTP::Instance), nothing waits for DNS here.
-	QHostInfo::lookupHost(
-		QString::fromLatin1(kStaticGramServerHost),
-		context.get(),
-		[=](const QHostInfo &info) {
-			const auto ip = PickStaticGramServerIp(info);
-			const auto known = ResolvedStaticGramServerIp();
-			if (!ip.empty() && (!afterFailures || ip != known)) {
-				finishServerLookup(ip, afterFailures);
-				return;
-			}
-			LOG(("MTP Warning: DNS lookup of %1 gave %2 (%3), "
-				"trying DNS-over-HTTPS."
-				).arg(kStaticGramServerHost
-				).arg(ip.empty()
-					? QStringLiteral("no usable IPv4")
-					: QString::fromStdString(ip)
-				).arg(info.errorString()));
-			startDohServerLookup(context, afterFailures);
-		});
+	// Skip system DNS (QHostInfo): on an untrusted network it is trivial to
+	// poison, and finishServerLookup() would replace every DC endpoint with
+	// the attacker's IP. DoH still has no RSA attestation on desktop (unlike
+	// Android's signed TXT), but it at least requires breaking TLS to the
+	// DoH provider rather than a local resolver.
+	LOG(("MTP Info: resolving %1 via DNS-over-HTTPS (system DNS skipped)."
+		).arg(kStaticGramServerHost));
+	startDohServerLookup(context, afterFailures);
 }
 
 void DcOptions::startDohServerLookup(
