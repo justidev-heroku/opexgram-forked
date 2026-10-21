@@ -4,8 +4,8 @@
 Usage: apply_patches.py <telegram-ios-root> <patches-dir>
 Env:   SG_SERVER_PORT (default 2398), SG_APP_VERSION
 
-The server address is dynamic: dc.staticgram.top (system DNS, then DoH) plus
-baked-in reserve IPs, see assets/StaticGramServer.swift.
+The server address is dynamic: the RSA-signed TXT _cfg.staticgram.top (DoH only,
+see 4n) plus baked-in reserve IPs, see assets/StaticGramServer.swift.
 
 Every replacement asserts the expected number of matches, so an upstream change
 fails the build loudly instead of silently producing a client that talks to Telegram.
@@ -56,7 +56,7 @@ def sub(rel, pattern, new, count=1, flags=re.S):
 
 # ---------------------------------------------------------------- 1. server
 NET = "submodules/TelegramCore/Sources/Network/Network.swift"
-# Resolver of dc.staticgram.top + reserve IPs (lives in TelegramCore, picked up by the glob).
+# Resolver of the signed TXT _cfg.staticgram.top + reserve IPs (lives in TelegramCore, picked up by the glob; see 4n).
 with open(os.path.join(PATCHES, "assets/StaticGramServer.swift"), encoding="utf-8") as f:
     sg_server_swift = f.read()
 assert f"let sgServerPort: UInt16 = {PORT}\n" in sg_server_swift, "SG_SERVER_PORT differs from StaticGramServer.swift"
@@ -65,18 +65,18 @@ print("[patch] TelegramCore/Sources/Network/StaticGramServer.swift added")
 seed = ", ".join(f"{i}: sgServerFallbackIps" for i in range(1, 6))
 sub(NET,
     r"let seedAddressList: \[Int: \[String\]\]\s*\n\s*if testingEnvironment \{.*?\n\s*\}\s*else\s*\{.*?\n\s*\]\s*\n\s*\}",
-    f"// StaticGram: every datacenter lives on our server (reserve IPs; dc.staticgram.top is resolved at runtime)\n            let seedAddressList: [Int: [String]] = [{seed}]")
+    f"// StaticGram: every datacenter lives on our server (reserve IPs; signed TXT _cfg.staticgram.top is fetched at runtime)\n            let seedAddressList: [Int: [String]] = [{seed}]")
 replace(NET,
         "MTDatacenterAddress(ip: $0, port: 443, preferForMedia: false",
         f"MTDatacenterAddress(ip: $0, port: {PORT}, preferForMedia: false")
 # No backup-IP discovery (DNS-over-HTTPS / Firebase lookups of Telegram's own DCs).
 sub(NET,
     r"\n(\s*)context\.setDiscoverBackupAddressListSignal\(MTBackupAddressSignals\.fetchBackupIps\([^\n]*\)\)\n",
-    "\n                // StaticGram: backup address discovery = re-resolve dc.staticgram.top (Telegram's own lookup is not used)\n"
+    "\n                // StaticGram: backup address discovery = re-fetch the signed TXT _cfg.staticgram.top (Telegram's own lookup is not used)\n"
     "                let _ = wrappedAdditionalSource\n"
     "                context.setDiscoverBackupAddressListSignal(sgServerDiscoverySignal(context: context))\n"
     "                sgStartInitialServerResolve(context: context)\n")
-# help.getConfig dc_options: a resolved dc.staticgram.top address wins over the advertised one.
+# help.getConfig dc_options: a verified (signed TXT) address wins over the advertised one.
 replace("submodules/TelegramCore/Sources/State/ManagedConfigurationUpdates.swift",
         "addressList[Int(id)]!.append(MTDatacenterAddress(ip: ipAddress, port: UInt16(port),",
         "addressList[Int(id)]!.append(MTDatacenterAddress(ip: sgConfigServerIp(ipAddress, isCdn: isCdn), port: UInt16(port),")
@@ -856,6 +856,21 @@ for rel, old, new in [
      '"#\\(gift.number)"', '"#\\(collectibleNumberText(gift))"'),
 ]:
     replace(rel, old, new)
+
+# ---------------------------------------------------------------- 4n. server address: only RSA-signed TXT (Android parity)
+# The resolver used to take dc.staticgram.top A records from system DNS, then DoH, unsigned: a poisoned resolver
+# (open Wi-Fi, rogue DHCP, ISP) could move every datacenter to a foreign IP (DoS, phishing of the login flow;
+# the MTProto RSA key still prevents MITM decryption). Now (assets/StaticGramServer.swift, written in 1.) only
+# TXT _cfg.staticgram.top over DoH (Cloudflare, Google) is used, "v1:<ip>:<port>:<base64 sig>", accepted only if
+# the RSASSA-PKCS1-v1_5 / SHA-256 signature over "<ip>:<port>" verifies (Security.framework SecKeyVerifySignature)
+# with the server identity key (= server_rsa.pub, the MTProto key), port == SG_SERVER_PORT, public non-Cloudflare
+# IPv4. Same format/check as Android tgnet verifyShuzaGramAttestation and desktop mtproto_signed_server_txt.cpp;
+# records are made with /root/staticgram-assets/sg-cfg-txt.py. Nothing verifies -> current addresses + reserve IPs.
+cfg_key_der = "".join(pem_lines[1:-1])
+assert f'let sgServerCfgPublicKey = "{cfg_key_der}"\n' in sg_server_swift, \
+    "StaticGramServer.swift sgServerCfgPublicKey differs from assets/server_rsa.pub"
+assert 'type=TXT' in sg_server_swift and 'getaddrinfo' not in sg_server_swift, "StaticGramServer.swift: unsigned lookup is back"
+print("[patch] signed TXT key matches server_rsa.pub")
 
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:

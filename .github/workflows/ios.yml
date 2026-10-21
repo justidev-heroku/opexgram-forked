@@ -67,7 +67,7 @@ jobs:
 
       - name: Apply StaticGram patches
         env:
-          # Server address is dynamic (dc.staticgram.top + reserve IPs), see ios/assets/StaticGramServer.swift
+          # Server address is dynamic (signed TXT _cfg.staticgram.top + reserve IPs), see ios/assets/StaticGramServer.swift
           SG_SERVER_PORT: "2398"
         run: |
           python3 sg/ios/apply_patches.py tg sg/ios
