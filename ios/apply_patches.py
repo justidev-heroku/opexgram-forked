@@ -676,6 +676,37 @@ replace(BUILD,
         "<string>Telegram iOS Color Theme File</string>",
         f"<string>{APP_NAME} iOS Color Theme File</string>")
 
+# ---------------------------------------------------------------- 4l. short phone numbers (+0, +888, +37369)
+# Numbers issued by the admin may be code-only (+888) or 1-2 digits (+0). Upstream enables Next only when
+# a country is recognised AND the subscriber part is non-empty, and nextPressed checks the same. StaticGram
+# lets any digit through and the server decides validity.
+AUTH_CTRL = "submodules/AuthorizationUI/Sources/AuthorizationSequencePhoneEntryController.swift"
+AUTH_NODE = "submodules/AuthorizationUI/Sources/AuthorizationSequencePhoneEntryControllerNode.swift"
+# nextPressed: currentNumber is the full cleaned number ("+" + digits); it is what loginWithNumber receives.
+replace(AUTH_CTRL,
+        "        let (_, _, number) = self.controllerNode.codeAndNumber\n"
+        "        if !number.isEmpty {\n",
+        "        // StaticGram: short numbers (+0, +888, +37369): any digit is enough, the server decides\n"
+        "        if self.controllerNode.currentNumber.contains(where: { $0.isNumber }) {\n")
+# Next button enabled as soon as the full number has at least one digit (was: country + non-empty tail).
+replace(AUTH_NODE,
+        "                let isServiceNumber = strongSelf.phoneInputNode.number.hasPrefix(\"+999\")\n"
+        "                if strongSelf.hasCountry || isServiceNumber {\n"
+        "                    strongSelf.hasNumberUpdated?(!strongSelf.phoneInputNode.codeAndNumber.2.isEmpty || isServiceNumber)\n"
+        "                } else {\n"
+        "                    strongSelf.hasNumberUpdated?(false)\n"
+        "                }\n",
+        "                // StaticGram: short numbers allowed; full number without '+' must have >= 1 digit\n"
+        "                strongSelf.hasNumberUpdated?(strongSelf.phoneInputNode.number.filter({ $0 != \"+\" }).count >= 1)\n")
+replace(AUTH_NODE,
+        "                if strongSelf.hasCountry {\n"
+        "                    strongSelf.hasNumberUpdated?(!strongSelf.phoneInputNode.codeAndNumber.2.isEmpty)\n"
+        "                } else {\n"
+        "                    strongSelf.hasNumberUpdated?(false)\n"
+        "                }\n",
+        "                // StaticGram: same rule as numberTextUpdated (no country / non-empty tail requirement)\n"
+        "                strongSelf.hasNumberUpdated?(strongSelf.phoneInputNode.number.filter({ $0 != \"+\" }).count >= 1)\n")
+
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
     f.write("\n# StaticGram CI\n"
