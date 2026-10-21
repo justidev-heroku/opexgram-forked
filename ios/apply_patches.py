@@ -621,6 +621,38 @@ replace(BUBBLE,
         "                // StaticGram: status tap target = icon frame only, never over the author name\n"
         "                credibilityButtonNode.frame = credibilityIconFrame\n")
 
+# ---------------------------------------------------------------- 4k. context menu: message does not vanish after "Copy"
+# PortalTransitionStaging.enter() moves contentNode.view into a temporary wrapper via UIKit, so ASDK still
+# reports the old supernode. If the menu is dismissed before the open animation settled (fast tap on
+# "Copy"), settle(into:) calls addSubnode on the node that is already the supernode: ASDK returns early
+# (ASDisplayNode.mm _addSubnode: oldParent == self), the view stays in the wrapper and is removed with it.
+# The bubble is gone until the chat is reopened. Fix: when the supernode already matches, move the view.
+CCEPN = "submodules/TelegramUI/Components/ContextControllerImpl/Sources/ContextControllerExtractedPresentationNode.swift"
+replace(CCEPN,
+        "            case let .node(containingNode):\n"
+        "                offsetContainerNode.addSubnode(containingNode.contentNode)\n",
+        "            case let .node(containingNode):\n"
+        "                // StaticGram: addSubnode is a no-op when the supernode already matches, see 4k\n"
+        "                if containingNode.contentNode.supernode === offsetContainerNode {\n"
+        "                    offsetContainerNode.view.addSubview(containingNode.contentNode.view)\n"
+        "                } else {\n"
+        "                    offsetContainerNode.addSubnode(containingNode.contentNode)\n"
+        "                }\n")
+replace(CCEPN,
+        "            case let .node(containingNode):\n"
+        "                containingNode.addSubnode(containingNode.contentNode)\n"
+        "            case let .view(containingView):\n"
+        "                containingView.addSubview(containingView.contentView)\n",
+        "            case let .node(containingNode):\n"
+        "                // StaticGram: addSubnode is a no-op when the supernode already matches, see 4k\n"
+        "                if containingNode.contentNode.supernode === containingNode {\n"
+        "                    containingNode.view.addSubview(containingNode.contentNode.view)\n"
+        "                } else {\n"
+        "                    containingNode.addSubnode(containingNode.contentNode)\n"
+        "                }\n"
+        "            case let .view(containingView):\n"
+        "                containingView.addSubview(containingView.contentView)\n")
+
 # ---------------------------------------------------------------- 4j. iOS system UI: StaticGram name + logo
 # CallKit banner / lock-screen call UI / Phone recents showed "TELEGRAM" and the paper plane.
 replace("submodules/TelegramCallsUI/Sources/CallKitIntegration.swift",
