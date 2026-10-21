@@ -381,7 +381,7 @@ else:
 # Version bump.
 with open(path("versions.json")) as f:
     versions = json.load(f)
-versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.9")
+versions["app"] = os.environ.get("SG_APP_VERSION", "12.9.10")
 with open(path("versions.json"), "w") as f:
     json.dump(versions, f, indent=4)
 print(f"[patch] versions.json app = {versions['app']}")
@@ -706,6 +706,156 @@ replace(AUTH_NODE,
         "                }\n",
         "                // StaticGram: same rule as numberTextUpdated (no country / non-empty tail requirement)\n"
         "                strongSelf.hasNumberUpdated?(strongSelf.phoneInputNode.number.filter({ $0 != \"+\" }).count >= 1)\n")
+
+# ---------------------------------------------------------------- 4m. collectible letter numbers ("#VIP", "#ЛЕВ")
+# StaticGram can mint a collectible whose "number" is a label. StarGiftUnique.num is a TL int, so the
+# server puts the label into the slug and gives the gift a free negative number (what older clients
+# show, "#-1"). Shape (server: domain.UniqueStarGiftNumLabel, Android: UniqueGiftNumber): number < 0
+# and the slug's last "-" group is "x" + encoded label: ASCII letters/digits as is, "q" + 2 hex digits
+# = Cyrillic letter U+0400 + n, "qq"/"qQ" = literal q/Q; >= 1 letter, <= 16 characters.
+# formatCollectibleNumber gets a StarGift.UniqueGift overload, every "#<number>" of a unique gift goes
+# through it (titles, service messages, alerts) or collectibleNumberText (ribbons, plain "\(number)").
+GIFTFMT = "submodules/TelegramStringFormatting/Sources/GiftFormat.swift"
+replace(GIFTFMT,
+        "import Foundation\nimport TelegramPresentationData\n",
+        "import Foundation\nimport TelegramPresentationData\nimport TelegramCore\n")
+with open(path(GIFTFMT), "a", encoding="utf-8") as f:
+    f.write("""
+// StaticGram: letter label of a collectible ("VIP", "ЛЕВ"), nil for a plain number. See apply_patches 4m.
+public func collectibleNumberLabel(number: Int32, slug: String) -> String? {
+    if number >= 0 {
+        return nil
+    }
+    guard let dash = slug.lastIndex(of: "-") else {
+        return nil
+    }
+    let group = Array(slug[slug.index(after: dash)...].utf8)
+    if group.count < 2 || (group[0] != UInt8(ascii: "x") && group[0] != UInt8(ascii: "X")) {
+        return nil
+    }
+    func hexValue(_ c: UInt8) -> UInt32? {
+        switch c {
+        case UInt8(ascii: "0") ... UInt8(ascii: "9"):
+            return UInt32(c - UInt8(ascii: "0"))
+        case UInt8(ascii: "a") ... UInt8(ascii: "f"):
+            return UInt32(c - UInt8(ascii: "a") + 10)
+        case UInt8(ascii: "A") ... UInt8(ascii: "F"):
+            return UInt32(c - UInt8(ascii: "A") + 10)
+        default:
+            return nil
+        }
+    }
+    var scalars = String.UnicodeScalarView()
+    var hasLetter = false
+    var count = 0
+    var i = 1
+    while i < group.count {
+        let c = group[i]
+        let scalar: Unicode.Scalar
+        if c == UInt8(ascii: "q") || c == UInt8(ascii: "Q") {
+            guard i + 1 < group.count else {
+                return nil
+            }
+            let next = group[i + 1]
+            if next == UInt8(ascii: "q") || next == UInt8(ascii: "Q") {
+                scalar = Unicode.Scalar(next)
+                i += 2
+            } else {
+                guard i + 2 < group.count, let hi = hexValue(group[i + 1]), let lo = hexValue(group[i + 2]), let value = Unicode.Scalar(0x400 + (hi << 4 | lo)), value.properties.isAlphabetic else {
+                    return nil
+                }
+                scalar = value
+                i += 3
+            }
+        } else if (c >= UInt8(ascii: "0") && c <= UInt8(ascii: "9")) || (c >= UInt8(ascii: "a") && c <= UInt8(ascii: "z")) || (c >= UInt8(ascii: "A") && c <= UInt8(ascii: "Z")) {
+            scalar = Unicode.Scalar(c)
+            i += 1
+        } else {
+            return nil
+        }
+        if scalar.value > 0x39 {
+            hasLetter = true
+        }
+        count += 1
+        scalars.append(scalar)
+    }
+    return hasLetter && count <= 16 ? String(scalars) : nil
+}
+
+// StaticGram: what follows "#" for a unique gift: its label, else the formatted number.
+public func formatCollectibleNumber(_ gift: StarGift.UniqueGift, dateTimeFormat: PresentationDateTimeFormat) -> String {
+    if let label = collectibleNumberLabel(number: gift.number, slug: gift.slug) {
+        return label
+    }
+    return formatCollectibleNumber(gift.number, dateTimeFormat: dateTimeFormat)
+}
+
+// StaticGram: the label, else the plain number (ribbons and other "#\\(number)" places).
+public func collectibleNumberText(_ gift: StarGift.UniqueGift) -> String {
+    return collectibleNumberLabel(number: gift.number, slug: gift.slug) ?? "\\(gift.number)"
+}
+""")
+print(f"[patch] {GIFTFMT}: letter labels")
+
+# formatCollectibleNumber(<uniqueGift>.number, ...) -> formatCollectibleNumber(<uniqueGift>, ...).
+# Every receiver below is a StarGift.UniqueGift (checked against release-12.9.2).
+COLLECTIBLE_NUMBER_SITES = [
+    ("submodules/TelegramStringFormatting/Sources/ServiceMessageStrings.swift", 7),
+    ("submodules/TelegramUI/Components/Stars/StarsWithdrawalScreen/Sources/StarsWithdrawalScreen.swift", 1),
+    ("submodules/TelegramUI/Components/Stars/StarsTransactionScreen/Sources/StarsTransactionScreen.swift", 1),
+    ("submodules/TelegramUI/Components/Stars/StarsTransactionsScreen/Sources/StarsTransactionsListPanelComponent.swift", 2),
+    ("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftSaleAlertController.swift", 1),
+    ("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftValueScreen.swift", 1),
+    ("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftOfferAlertController.swift", 1),
+    ("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftTransferAlertController.swift", 2),
+    ("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftViewScreen.swift", 8),
+    ("submodules/TelegramUI/Components/Gifts/GiftCraftScreen/Sources/GiftCraftScreen.swift", 2),
+    ("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftPurchaseAlertController.swift", 1),
+    ("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftWithdrawAlertController.swift", 1),
+    ("submodules/TelegramUI/Components/PeerInfo/PeerInfoVisualMediaPaneNode/Sources/GiftContextPreviewController.swift", 1),
+    ("submodules/TelegramUI/Components/PeerInfo/PeerInfoVisualMediaPaneNode/Sources/GiftsListView.swift", 1),
+    ("submodules/TelegramUI/Components/PeerInfo/PeerInfoVisualMediaPaneNode/Sources/PeerInfoGiftsPaneNode.swift", 5),
+    ("submodules/TelegramUI/Components/Chat/ChatMessageGiftBubbleContentNode/Sources/ChatMessageGiftBubbleContentNode.swift", 3),
+    ("submodules/TelegramUI/Components/Chat/ChatMessageGiftOfferBubbleContentNode/Sources/ChatMessageGiftOfferBubbleContentNode.swift", 1),
+    ("submodules/TelegramUI/Sources/SharedAccountContext.swift", 1),
+    ("submodules/StatisticsUI/Sources/StarsTransactionItem.swift", 2),
+]
+for rel, n in COLLECTIBLE_NUMBER_SITES:
+    text = read(rel)
+    result, found = re.subn(r"formatCollectibleNumber\((uniqueGift|uniqueGiftValue|selectedMainGift|gift)\.number, ",
+                            r"formatCollectibleNumber(\1, ", text)
+    if found != n:
+        sys.exit(f"[patch] {rel}: collectible number expected {n} match(es), found {found}")
+    write(rel, result)
+    print(f"[patch] {rel}: collectible number ok ({n})")
+# ServiceMessageStrings: one more unique-gift title formatted without formatCollectibleNumber.
+replace("submodules/TelegramStringFormatting/Sources/ServiceMessageStrings.swift",
+        'let giftTitle = "\\(gift.title) #\\(presentationStringsFormattedNumber(gift.number, dateTimeFormat.groupingSeparator))"',
+        'let giftTitle = "\\(gift.title) #\\(formatCollectibleNumber(gift, dateTimeFormat: dateTimeFormat))"')
+# Gift view header "Collectible #<number>" (digit-by-digit slot animation): a label is drawn as plain text.
+replace("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftViewScreen.swift",
+        "if let numberValue = uniqueGift?.number {\n"
+        "                            let numberString = formatCollectibleNumber(numberValue, dateTimeFormat: environment.dateTimeFormat)\n",
+        "if let uniqueGiftValue = uniqueGift {\n"
+        "                            let numberString = formatCollectibleNumber(uniqueGiftValue, dateTimeFormat: environment.dateTimeFormat)\n")
+# Ribbons "#<number>" on gift tiles.
+for rel, old, new in [
+    ("submodules/TelegramUI/Components/Gifts/GiftUnpinScreen/Sources/GiftUnpinScreen.swift",
+     '"#\\(displayGift.number)"', '"#\\(collectibleNumberText(displayGift))"'),
+    ("submodules/TelegramUI/Components/Gifts/GiftCraftScreen/Sources/SelectCraftGiftScreen.swift",
+     '"#\\(gift.gift.number)"', '"#\\(collectibleNumberText(gift.gift))"'),
+    ("submodules/TelegramUI/Components/Gifts/GiftStoreScreen/Sources/GiftStoreScreen.swift",
+     '"#\\(uniqueGift.number)"', '"#\\(collectibleNumberText(uniqueGift))"'),
+    ("submodules/TelegramUI/Components/Gifts/GiftCraftScreen/Sources/GiftCraftScreen.swift",
+     '"#\\(gift.gift.number)"', '"#\\(collectibleNumberText(gift.gift))"'),
+    ("submodules/TelegramUI/Components/PeerInfo/PeerInfoVisualMediaPaneNode/Sources/GiftsListView.swift",
+     '"#\\(gift.number)"', '"#\\(collectibleNumberText(gift))"'),
+    ("submodules/TelegramUI/Components/Gifts/GiftOptionsScreen/Sources/GiftOptionsScreen.swift",
+     '"#\\(gift.number)"', '"#\\(collectibleNumberText(gift))"'),
+    ("submodules/TelegramUI/Components/Settings/PeerNameColorScreen/Sources/GiftListItemComponent.swift",
+     '"#\\(gift.number)"', '"#\\(collectibleNumberText(gift))"'),
+]:
+    replace(rel, old, new)
 
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
