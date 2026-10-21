@@ -59,7 +59,6 @@ constexpr auto kStaticGramServerHost = "_cfg.staticgram.top";
 constexpr auto kStaticGramServerPort = 2398;
 constexpr const char *kStaticGramServerFallbackIps[] = {
 	"185.246.223.47",
-	"13.143.160.46",
 };
 constexpr auto kStaticGramDohTimeoutMs = 5000;
 constexpr auto kStaticGramReresolveDebounce = 30 * crl::time(1000);
