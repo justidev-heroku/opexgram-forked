@@ -37,7 +37,9 @@ namespace {
 	const auto digits = ranges::count_if(
 		phone,
 		[](QChar ch) { return ch.isNumber(); });
-	return (digits > 1);
+	// Short numbers (+0, +888, +37369) are issued by the server admin:
+	// the client does not block them, the server decides.
+	return (digits > 0);
 }
 
 [[nodiscard]] QString DigitsOnly(QString value) {
@@ -163,16 +165,6 @@ void PhoneWidget::submit() {
 		return;
 	}
 
-	{
-		const auto hasCodeButWaitingPhone = _code->hasFocus()
-			&& (_code->getLastText().size() > 1)
-			&& _phone->getLastText().isEmpty();
-		if (hasCodeButWaitingPhone) {
-			_phone->hideError();
-			_phone->setFocus();
-			return;
-		}
-	}
 	const auto phone = fullNumber();
 	if (!AllowPhoneAttempt(phone)) {
 		showPhoneError(tr::lng_bad_phone());

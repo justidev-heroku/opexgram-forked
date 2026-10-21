@@ -439,10 +439,13 @@ QString FormatPhone(QString phone) {
 	if (phone.isEmpty()) {
 		return QString();
 	}
-	if (phone.at(0) == '0') {
-		return phone;
-	}
 	phone = phone.remove(QChar::Space);
+	if (phone.isEmpty()) {
+		return QString();
+	}
+	if (phone.at(0) == '0') {
+		return u"+"_q + phone;
+	}
 	return Countries::Instance().format({
 		.phone = (phone.at(0) == '+') ? phone.mid(1) : phone,
 	}).formatted;
