@@ -151,6 +151,16 @@ struct UniqueGift {
 [[nodiscard]] QString UniqueGiftName(const UniqueGift &gift);
 [[nodiscard]] QString UniqueGiftName(const QString &title, int number);
 
+// StaticGram: letter "numbers" of collectibles ("#VIP", "#ЛЕВ"). The label
+// travels in the slug (see UniqueGiftNumberLabel), the number is a free
+// negative one that older clients show.
+[[nodiscard]] QString UniqueGiftNumberLabel(int number, const QString &slug);
+[[nodiscard]] QString UniqueGiftNumberLabel(const UniqueGift &gift);
+// The label, else the number formatted as Lang::FormatCountDecimal.
+[[nodiscard]] QString UniqueGiftNumberText(const UniqueGift &gift);
+// Whether "#<number>" is worth showing: a positive number or a label.
+[[nodiscard]] bool UniqueGiftShowsNumber(const UniqueGift &gift);
+
 [[nodiscard]] CreditsAmount UniqueGiftResaleStars(const UniqueGift &gift);
 [[nodiscard]] CreditsAmount UniqueGiftResaleTon(const UniqueGift &gift);
 [[nodiscard]] CreditsAmount UniqueGiftResaleAsked(const UniqueGift &gift);

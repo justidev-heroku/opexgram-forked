@@ -1962,8 +1962,8 @@ void StartCraftAnimation(
 			using Result = std::shared_ptr<Data::GiftUpgradeResult>;
 			state->craftResult = v::get<Result>(result);
 			if (const auto result = state->craftResult->get()) {
-				auto numberText = (result->info.unique && result->info.unique->number > 0)
-					? rpl::single(u"#"_q + Lang::FormatCountDecimal(result->info.unique->number))
+				auto numberText = (result->info.unique && Data::UniqueGiftShowsNumber(*result->info.unique))
+					? rpl::single(u"#"_q + Data::UniqueGiftNumberText(*result->info.unique))
 					: rpl::producer<QString>();
 
 				state->successAnimation = std::make_unique<

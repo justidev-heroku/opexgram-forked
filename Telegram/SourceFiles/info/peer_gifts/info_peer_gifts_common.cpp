@@ -929,7 +929,7 @@ void GiftButton::paint(QPainter &p, float64 craftProgress) {
 				.text = (onsale
 					? tr::lng_gift_stars_on_sale(tr::now)
 					: (unique && (data.resale || pinned || data.mine))
-					? ('#' + Lang::FormatCountDecimal(unique->number))
+					? ('#' + Data::UniqueGiftNumberText(*unique))
 					: data.resale
 					? tr::lng_gift_stars_resale(tr::now)
 					: soldOut

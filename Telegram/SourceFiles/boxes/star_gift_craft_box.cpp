@@ -1529,7 +1529,7 @@ void MakeCraftContent(
 		for (const auto &gift : gifts) {
 			if (gift.unique) {
 				cs->lostGifts.push_back({
-					.number = u"#"_q + Lang::FormatCountDecimal(gift.unique->number),
+					.number = u"#"_q + Data::UniqueGiftNumberText(*gift.unique),
 				});
 			}
 		}

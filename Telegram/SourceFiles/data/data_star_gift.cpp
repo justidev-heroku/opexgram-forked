@@ -61,7 +61,93 @@ constexpr auto kCraftGiftsPerPage = 50;
 } // namespace
 
 QString UniqueGiftName(const UniqueGift &gift) {
-	return UniqueGiftName(gift.title, gift.number);
+	return gift.title + u" #"_q + UniqueGiftNumberText(gift);
+}
+
+// Shape (server: domain.UniqueStarGiftNumLabel): number < 0 and the slug's
+// last '-' group is 'x' + the encoded label, where ASCII letters and digits
+// stand for themselves, 'q' + two hex digits is the Cyrillic letter
+// U+0400 + n and "qq" / "qQ" is a literal q / Q. At least one letter, at
+// most 16 characters; anything else is a plain number.
+QString UniqueGiftNumberLabel(int number, const QString &slug) {
+	if (number >= 0) {
+		return QString();
+	}
+	const auto dash = slug.lastIndexOf(QChar('-'));
+	if (dash < 0) {
+		return QString();
+	}
+	const auto group = QStringView(slug).mid(dash + 1);
+	if (group.size() < 2
+		|| (group[0] != QChar('x') && group[0] != QChar('X'))) {
+		return QString();
+	}
+	const auto hex = [](QChar c) {
+		const auto u = int(c.unicode());
+		return (u >= '0' && u <= '9')
+			? (u - '0')
+			: (u >= 'a' && u <= 'f')
+			? (u - 'a' + 10)
+			: (u >= 'A' && u <= 'F')
+			? (u - 'A' + 10)
+			: -1;
+	};
+	auto result = QString();
+	auto letter = false;
+	auto count = 0;
+	for (auto i = 1; i < group.size(); ++i) {
+		const auto c = int(group[i].unicode());
+		auto ch = QChar();
+		if (c == 'q' || c == 'Q') {
+			if (i + 1 >= group.size()) {
+				return QString();
+			}
+			const auto next = int(group[i + 1].unicode());
+			if (next == 'q' || next == 'Q') {
+				ch = QChar(ushort(next));
+				++i;
+			} else {
+				if (i + 2 >= group.size()) {
+					return QString();
+				}
+				const auto hi = hex(group[i + 1]);
+				const auto lo = hex(group[i + 2]);
+				if (hi < 0 || lo < 0) {
+					return QString();
+				}
+				ch = QChar(ushort(0x400 + ((hi << 4) | lo)));
+				if (!ch.isLetter()) {
+					return QString();
+				}
+				i += 2;
+			}
+		} else if ((c >= '0' && c <= '9')
+			|| (c >= 'a' && c <= 'z')
+			|| (c >= 'A' && c <= 'Z')) {
+			ch = QChar(ushort(c));
+		} else {
+			return QString();
+		}
+		if (ch.unicode() > '9') {
+			letter = true;
+		}
+		++count;
+		result.append(ch);
+	}
+	return (letter && count <= 16) ? result : QString();
+}
+
+QString UniqueGiftNumberLabel(const UniqueGift &gift) {
+	return UniqueGiftNumberLabel(gift.number, gift.slug);
+}
+
+QString UniqueGiftNumberText(const UniqueGift &gift) {
+	const auto label = UniqueGiftNumberLabel(gift);
+	return label.isEmpty() ? Lang::FormatCountDecimal(gift.number) : label;
+}
+
+bool UniqueGiftShowsNumber(const UniqueGift &gift) {
+	return (gift.number > 0) || !UniqueGiftNumberLabel(gift).isEmpty();
 }
 
 QString UniqueGiftName(const QString &title, int number) {

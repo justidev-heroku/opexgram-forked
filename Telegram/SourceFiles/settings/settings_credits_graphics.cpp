@@ -1428,8 +1428,8 @@ void GenericCreditsEntryCover(
 			}
 			: Fn<void()>();
 		AddUniqueGiftCover(content, rpl::single(cover), {
-			.numberText = (uniqueGift->number > 0)
-				? rpl::single(u"#"_q + Lang::FormatCountDecimal(uniqueGift->number))
+			.numberText = Data::UniqueGiftShowsNumber(*uniqueGift)
+				? rpl::single(u"#"_q + Data::UniqueGiftNumberText(*uniqueGift))
 				: rpl::producer<QString>(),
 			.resalePrice = UniqueGiftResalePrice(e.uniqueGift, forceTon),
 			.resaleClick = resaleClick,
@@ -1735,7 +1735,9 @@ void GenericCreditsEntryBody(
 					: e.converted
 					? tr::lng_credits_box_history_entry_gift_converted(tr::now)
 					: (e.giftNumber && !e.giftTitle.isEmpty())
-					? Data::UniqueGiftName(e.giftTitle, e.giftNumber)
+					? (uniqueGift
+						? Data::UniqueGiftName(*uniqueGift)
+						: Data::UniqueGiftName(e.giftTitle, e.giftNumber))
 					: (isStarGift && !starGiftCanManage)
 					? tr::lng_gift_link_label_gift(tr::now)
 					: giftToSelf
