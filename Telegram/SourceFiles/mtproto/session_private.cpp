@@ -1107,8 +1107,8 @@ void SessionPrivate::connectToServer(bool afterConfig) {
 				instance->requestConfigIfOld();
 			});
 		}
-		// StaticGram: the server may have moved, ask DcOptions to resolve
-		// dc.staticgram.top again (debounced there) after repeated failures.
+		// StaticGram: the server may have moved, ask DcOptions to fetch the
+		// signed TXT again (debounced there) after repeated failures.
 		const auto regular = (_currentDcType != DcType::Cdn)
 			&& (_currentDcType != DcType::Temporary)
 			&& (_options->proxy.type != ProxyData::Type::Mtproto)

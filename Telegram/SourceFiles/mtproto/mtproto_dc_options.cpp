@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "mtproto/details/mtproto_rsa_public_key.h"
 #include "mtproto/details/mtproto_domain_resolver.h"
+#include "mtproto/details/mtproto_signed_server_txt.h"
 #include "mtproto/facade.h"
 #include "mtproto/connection_tcp.h"
 #include "storage/serialize_common.h"
@@ -44,19 +45,17 @@ struct BuiltInDc {
 // real multi-DC Telegram backend. Every dc_id below points at the same
 // server. Startup never blocks on DNS: the built-in DCs are built with the
 // baked-in reserve IPs (all of them are tried in parallel by the session),
-// and dc.staticgram.top is resolved asynchronously afterwards via
-// DNS-over-HTTPS only (not system DNS — that path is trivial to poison on
-// open Wi-Fi / rogue DHCP). A resolved public IPv4 REPLACES every regular
-// IPv4 endpoint, including ones saved from earlier dc_options, so the
-// server can move without a client rebuild. After several failed connects
-// in a row the lookup is repeated (debounced) and the reserve IPs are
-// re-added.
-//
-// Android already requires a signed TXT (_cfg.staticgram.top) before
-// applying candidates; desktop still lacks that verify and therefore only
-// mitigates local DNS spoofing here. Port native_sgVerifyCfgTxt-equivalent
-// before treating DoH A as fully trusted.
-constexpr auto kStaticGramServerHost = "dc.staticgram.top";
+// and the signed TXT _cfg.staticgram.top is fetched asynchronously
+// afterwards via DNS-over-HTTPS (not system DNS). Only a record whose RSA
+// signature verifies against the server identity key is used (same format
+// and check as Android, see mtproto_signed_server_txt.h); unsigned A records
+// of dc.staticgram.top are never applied, so a spoofed DNS / DoH answer
+// cannot move the client to a foreign IP. A verified public IPv4 REPLACES
+// every regular IPv4 endpoint, including ones saved from earlier
+// dc_options, so the server can move without a client rebuild. If nothing
+// verifies, the current addresses stay; after several failed connects in a
+// row the lookup is repeated (debounced) and the reserve IPs are re-added.
+constexpr auto kStaticGramServerHost = "_cfg.staticgram.top";
 constexpr auto kStaticGramServerPort = 2398;
 constexpr const char *kStaticGramServerFallbackIps[] = {
 	"185.246.223.47",
@@ -573,12 +572,7 @@ void DcOptions::startServerLookup(
 	_serverLookupRunning = true;
 	_serverLookupStartedAt = crl::now();
 
-	// Skip system DNS (QHostInfo): on an untrusted network it is trivial to
-	// poison, and finishServerLookup() would replace every DC endpoint with
-	// the attacker's IP. DoH still has no RSA attestation on desktop (unlike
-	// Android's signed TXT), but it at least requires breaking TLS to the
-	// DoH provider rather than a local resolver.
-	LOG(("MTP Info: resolving %1 via DNS-over-HTTPS (system DNS skipped)."
+	LOG(("MTP Info: fetching signed TXT %1 via DNS-over-HTTPS."
 		).arg(kStaticGramServerHost));
 	startDohServerLookup(context, afterFailures);
 }
@@ -595,9 +589,9 @@ void DcOptions::startDohServerLookup(
 	const auto host = QString::fromLatin1(kStaticGramServerHost);
 	const auto urls = std::vector<QUrl>{
 		QUrl(QStringLiteral(
-			"https://cloudflare-dns.com/dns-query?name=%1&type=A").arg(host)),
+			"https://cloudflare-dns.com/dns-query?name=%1&type=TXT").arg(host)),
 		QUrl(QStringLiteral(
-			"https://dns.google/resolve?name=%1&type=A").arg(host)),
+			"https://dns.google/resolve?name=%1&type=TXT").arg(host)),
 	};
 	const auto finishOne = [=](const std::string &ip) {
 		if (!state->done && !ip.empty()) {
@@ -609,7 +603,8 @@ void DcOptions::startDohServerLookup(
 		}
 		if (!state->done) {
 			state->done = true;
-			LOG(("MTP Warning: DNS-over-HTTPS lookup of %1 failed."
+			LOG(("MTP Warning: no correctly signed TXT %1 "
+				"via DNS-over-HTTPS."
 				).arg(kStaticGramServerHost));
 			finishServerLookup(std::string(), afterFailures);
 		}
@@ -626,12 +621,26 @@ void DcOptions::startDohServerLookup(
 			if (reply->error() == QNetworkReply::NoError) {
 				const auto entries = details::ParseDnsResponse(
 					reply->readAll(),
-					1); // A records only.
+					16); // TXT records only.
+				const auto key = SgServerPublicKeys().front();
 				for (const auto &entry : entries) {
-					ip = ValidStaticGramServerIp(entry.data);
+					const auto txt = details::UnquoteDnsTxt(
+						entry.data.toStdString());
+					const auto signedIp = details::VerifySignedServerTxt(
+						txt,
+						key,
+						kStaticGramServerPort);
+					ip = signedIp.empty()
+						? std::string()
+						: ValidStaticGramServerIp(
+							QString::fromStdString(signedIp));
 					if (!ip.empty()) {
 						break;
 					}
+					LOG(("MTP Warning: TXT %1 from %2 rejected "
+						"(bad signature, format or address)."
+						).arg(kStaticGramServerHost
+						).arg(reply->url().host()));
 				}
 			}
 			reply->deleteLater();

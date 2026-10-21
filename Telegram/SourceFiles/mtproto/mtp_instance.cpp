@@ -388,7 +388,7 @@ void Instance::Private::start() {
 	requestConfig();
 
 	// StaticGram: sessions above already try the baked-in reserve IPs (and
-	// any saved address); the server domain is resolved asynchronously and
+	// any saved address); the signed server address is fetched asynchronously and
 	// replaces them (dcOptions().changed() -> reconnect). Sessions ask for a
 	// new lookup after repeated connect failures (SessionPrivate).
 	if (!isKeysDestroyer()) {

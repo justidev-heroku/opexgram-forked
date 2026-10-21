@@ -84,16 +84,16 @@ public:
 	void addFromList(const MTPVector<MTPDcOption> &options);
 	void addFromOther(DcOptions &&options);
 
-	// StaticGram: resolve the server domain in the background (never
-	// blocking; system DNS, then DNS-over-HTTPS) and point every regular
-	// IPv4 endpoint at the resolved address, firing changed() for the
-	// affected DCs. The result is delivered on the context's thread and
+	// StaticGram: fetch the signed TXT _cfg.staticgram.top in the
+	// background (never blocking; DNS-over-HTTPS only, RSA signature
+	// checked) and point every regular IPv4 endpoint at the verified
+	// address, firing changed() for the affected DCs. The result is delivered on the context's thread and
 	// dropped if the context is gone, so this object must stay alive while
 	// the context can process events. Main thread only.
 	void startBuiltInServerLookup(not_null<QObject*> context);
 
-	// StaticGram: called after repeated connect failures; debounced. If DNS
-	// gives nothing new, the baked-in reserve IPs are re-added.
+	// StaticGram: called after repeated connect failures; debounced. If no
+	// new signed address comes, the baked-in reserve IPs are re-added.
 	void reresolveBuiltInServer(not_null<QObject*> context);
 
 	[[nodiscard]] std::vector<DcId> configEnumDcIds() const;

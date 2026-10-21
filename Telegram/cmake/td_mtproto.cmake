@@ -31,6 +31,8 @@ PRIVATE
     mtproto/details/mtproto_rsa_public_key.h
     mtproto/details/mtproto_serialized_request.cpp
     mtproto/details/mtproto_serialized_request.h
+    mtproto/details/mtproto_signed_server_txt.cpp
+    mtproto/details/mtproto_signed_server_txt.h
     mtproto/details/mtproto_tcp_socket.cpp
     mtproto/details/mtproto_tcp_socket.h
     mtproto/details/mtproto_tls_socket.cpp
