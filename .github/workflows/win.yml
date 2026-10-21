@@ -69,8 +69,9 @@ jobs:
     steps:
       - name: Prepare directories.
         run: |
-          mkdir %userprofile%\TBuild\Libraries
-          mklink /d %GITHUB_WORKSPACE%\TBuild %userprofile%\TBuild
+          rem StaticGram: build on D: (the workspace drive); C: runs out of space
+          mkdir D:\TBuild\Libraries
+          mklink /d %GITHUB_WORKSPACE%\TBuild D:\TBuild
           echo TBUILD=%GITHUB_WORKSPACE%\TBuild>>%GITHUB_ENV%
           echo LibrariesPath=%GITHUB_WORKSPACE%\TBuild\Libraries${{ matrix.arch == 'x64' && '\win64' || '' }}>>%GITHUB_ENV%
 
@@ -262,7 +263,7 @@ jobs:
       - name: Free runner disk on C.
         shell: pwsh
         run: |
-          Get-PSDrive C | Select-Object Used,Free
+          Get-PSDrive C,D | Select-Object Name,Used,Free
           foreach ($p in @('C:\Android','C:\hostedtoolcache\windows\go','C:\hostedtoolcache\windows\Ruby','C:\hostedtoolcache\windows\PyPy','C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk','C:\Program Files\dotnet\sdk','C:\ghcup','C:\Strawberry','C:\Julia','C:\Miniconda','C:\selenium','C:\tools\php')) {
             if (Test-Path $p) { Remove-Item $p -Recurse -Force -ErrorAction SilentlyContinue }
           }
