@@ -721,6 +721,20 @@ replace(GIFTFMT,
         "import Foundation\nimport TelegramPresentationData\nimport TelegramCore\n")
 with open(path(GIFTFMT), "a", encoding="utf-8") as f:
     f.write("""
+// StaticGram: what follows "#" for a unique gift: its label, else the formatted number.
+public func formatCollectibleNumber(_ gift: StarGift.UniqueGift, dateTimeFormat: PresentationDateTimeFormat) -> String {
+    if let label = collectibleNumberLabel(number: gift.number, slug: gift.slug) {
+        return label
+    }
+    return formatCollectibleNumber(gift.number, dateTimeFormat: dateTimeFormat)
+}
+
+""")
+print(f"[patch] {GIFTFMT}: letter labels")
+# The label helpers live in TelegramCore: every gift screen imports it, TelegramStringFormatting not.
+GIFTLABEL = "submodules/TelegramCore/Sources/StaticGramGiftLabel.swift"
+write(GIFTLABEL, """import Foundation
+
 // StaticGram: letter label of a collectible ("VIP", "ЛЕВ"), nil for a plain number. See apply_patches 4m.
 public func collectibleNumberLabel(number: Int32, slug: String) -> String? {
     if number >= 0 {
@@ -782,20 +796,12 @@ public func collectibleNumberLabel(number: Int32, slug: String) -> String? {
     return hasLetter && count <= 16 ? String(scalars) : nil
 }
 
-// StaticGram: what follows "#" for a unique gift: its label, else the formatted number.
-public func formatCollectibleNumber(_ gift: StarGift.UniqueGift, dateTimeFormat: PresentationDateTimeFormat) -> String {
-    if let label = collectibleNumberLabel(number: gift.number, slug: gift.slug) {
-        return label
-    }
-    return formatCollectibleNumber(gift.number, dateTimeFormat: dateTimeFormat)
-}
-
 // StaticGram: the label, else the plain number (ribbons and other "#\\(number)" places).
 public func collectibleNumberText(_ gift: StarGift.UniqueGift) -> String {
     return collectibleNumberLabel(number: gift.number, slug: gift.slug) ?? "\\(gift.number)"
 }
 """)
-print(f"[patch] {GIFTFMT}: letter labels")
+print(f"[patch] {GIFTLABEL}: added")
 
 # formatCollectibleNumber(<uniqueGift>.number, ...) -> formatCollectibleNumber(<uniqueGift>, ...).
 # Every receiver below is a StarGift.UniqueGift (checked against release-12.9.2).
