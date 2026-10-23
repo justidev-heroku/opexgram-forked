@@ -119,5 +119,7 @@
     <file alias="swipe_ungroup.tgs">../../animations/swipe_action/ungroup.tgs</file>
     <file alias="craft_progress.tgs">../../animations/craft_progress.tgs</file>
     <file alias="cleaning_cache.tgs">../../animations/cleaning_cache.tgs</file>
+    <file alias="splash_dark.tgs">../../animations/splash_dark.tgs</file>
+    <file alias="splash_light.tgs">../../animations/splash_light.tgs</file>
   </qresource>
 </RCC>

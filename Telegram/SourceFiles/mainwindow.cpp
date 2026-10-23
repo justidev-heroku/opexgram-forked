@@ -45,6 +45,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/window_controller.h" // App::wnd.
 #include "window/window_session_controller.h"
 #include "window/window_setup_email.h"
+#include "window/window_startup_splash.h"
 #include "window/window_media_preview.h"
 #include "styles/style_window.h"
 
@@ -153,6 +154,10 @@ void MainWindow::finishFirstShow() {
 		_main->activate();
 	} else if (!_passcodeLock && !_setupEmailLock && _intro) {
 		_intro->setInnerFocus();
+	}
+
+	if (controller().isPrimary() && isVisible() && !isMinimized()) {
+		Window::ShowStartupSplash(bodyWidget());
 	}
 }
 
