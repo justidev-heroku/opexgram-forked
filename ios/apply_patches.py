@@ -10,6 +10,7 @@ see 4n) plus baked-in reserve IPs, see assets/StaticGramServer.swift.
 Every replacement asserts the expected number of matches, so an upstream change
 fails the build loudly instead of silently producing a client that talks to Telegram.
 """
+import gzip
 import json
 import os
 import re
@@ -908,6 +909,33 @@ replace("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftViewS
         "            )\n"
         "            \n"
         "            return CGSize(width: context.availableSize.width, height: sgContentHeight)\n")
+
+# ---------------------------------------------------------------- 4p. launch: animated logo (Android parity)
+# LaunchScreen.xib is already empty (systemBackgroundColor = white / black), nothing to remove there.
+# assets/StaticGramLaunchSplash.swift puts an overlay with the same background on the main window right after
+# makeKeyAndVisible and plays the logo animation (rlottie via DefaultAnimatedStickerNodeImpl, like IntroMail),
+# then fades it out (380 ms, alpha 1->0, scale 1->1.35); 2.6 s fallback, no touches, once per process.
+# The Lottie files (assets/splash/*.json, 1080x1080 @60fps) go to the app bundle as gzipped .tgs.
+assert "LaunchScreen" in read(BUILD)
+launch_xib = read("Telegram/Telegram-iOS/Base.lproj/LaunchScreen.xib")
+assert "<imageView" not in launch_xib and "<label" not in launch_xib and 'systemColor="systemBackgroundColor"' in launch_xib, \
+    "LaunchScreen.xib is not a plain background any more"
+for src_name, dst_name in (("splash_dark.json", "SGSplashDark.tgs"), ("splash_light.json", "SGSplashLight.tgs")):
+    with open(os.path.join(PATCHES, "assets/splash", src_name), "rb") as f:
+        lottie_data = f.read()
+    lottie = json.loads(lottie_data)
+    assert (lottie["w"], lottie["h"]) == (1080, 1080), src_name
+    dst = path(f"Telegram/Telegram-iOS/Resources/{dst_name}")
+    assert not os.path.exists(dst), dst
+    with open(dst, "wb") as f:
+        f.write(gzip.compress(lottie_data, compresslevel=9, mtime=0))
+shutil.copyfile(os.path.join(PATCHES, "assets/StaticGramLaunchSplash.swift"),
+                path("submodules/TelegramUI/Sources/StaticGramLaunchSplash.swift"))
+replace(APPD,
+        "        self.window?.makeKeyAndVisible()\n",
+        "        self.window?.makeKeyAndVisible()\n"
+        "        sgShowLaunchSplash(window: self.window, application: application) // StaticGram: animated logo, see 4p\n")
+print("[patch] launch splash: SGSplashDark/SGSplashLight.tgs + StaticGramLaunchSplash.swift")
 
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
