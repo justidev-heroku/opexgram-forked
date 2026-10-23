@@ -21,9 +21,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 namespace Window {
 namespace {
 
-// Lottie canvas is 1080x1080 with the crystal taking 440 px of it,
-// so a 275 px canvas gives a ~112 px crystal (same as on Android).
-constexpr auto kLogoSize = 275;
+// Lottie canvas is 1320x1320 with the crystal taking 440 px of it,
+// so a 336 px canvas gives a ~112 px crystal (same as on Android).
+constexpr auto kLogoSize = 336;
 constexpr auto kFramesPerSecond = 60;
 constexpr auto kHideDuration = crl::time(380);
 constexpr auto kHideScale = 1.35;
