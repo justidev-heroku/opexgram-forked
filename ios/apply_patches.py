@@ -924,7 +924,7 @@ for src_name, dst_name in (("splash_dark.json", "SGSplashDark.tgs"), ("splash_li
     with open(os.path.join(PATCHES, "assets/splash", src_name), "rb") as f:
         lottie_data = f.read()
     lottie = json.loads(lottie_data)
-    assert (lottie["w"], lottie["h"]) == (1080, 1080), src_name
+    assert (lottie["w"], lottie["h"]) == (1320, 1320), src_name
     dst = path(f"Telegram/Telegram-iOS/Resources/{dst_name}")
     assert not os.path.exists(dst), dst
     with open(dst, "wb") as f:
