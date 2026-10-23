@@ -8,7 +8,7 @@ import TelegramAnimatedStickerNode
 // StaticGram: animated logo on app start (Android parity).
 // LaunchScreen is a plain systemBackgroundColor (white / black). Right after the main window is shown,
 // an overlay with the same background is put on top of it and plays SGSplashDark/SGSplashLight.tgs
-// (rlottie, 1080x1080 canvas, crystal = 440px -> 112pt, canvas ~275pt) in the middle of the window.
+// (rlottie, 1320x1320 canvas, crystal = 440px -> 112pt, canvas 336pt) in the middle of the window.
 // When the animation ends the overlay fades out in 380 ms (alpha 1 -> 0, logo scale 1 -> 1.35, ease-in).
 // It never takes touches, is shown at most once per process and is removed after 2.6 s at the latest.
 
@@ -34,7 +34,7 @@ func sgShowLaunchSplash(window: UIWindow?, application: UIApplication) {
 }
 
 private final class SGLaunchSplashView: UIView {
-    private static let canvasSide: CGFloat = 275.0
+    private static let canvasSide: CGFloat = 336.0
     private static let fallbackTimeout: Double = 2.6
     private static let fadeDuration: Double = 0.38
 

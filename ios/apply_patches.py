@@ -915,7 +915,7 @@ replace("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftViewS
 # assets/StaticGramLaunchSplash.swift puts an overlay with the same background on the main window right after
 # makeKeyAndVisible and plays the logo animation (rlottie via DefaultAnimatedStickerNodeImpl, like IntroMail),
 # then fades it out (380 ms, alpha 1->0, scale 1->1.35); 2.6 s fallback, no touches, once per process.
-# The Lottie files (assets/splash/*.json, 1080x1080 @60fps) go to the app bundle as gzipped .tgs.
+# The Lottie files (assets/splash/*.json, 1320x1320 @60fps) go to the app bundle as gzipped .tgs.
 assert "LaunchScreen" in read(BUILD)
 launch_xib = read("Telegram/Telegram-iOS/Base.lproj/LaunchScreen.xib")
 assert "<imageView" not in launch_xib and "<label" not in launch_xib and 'systemColor="systemBackgroundColor"' in launch_xib, \
