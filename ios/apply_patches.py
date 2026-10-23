@@ -878,6 +878,37 @@ assert f'let sgServerCfgPublicKey = "{cfg_key_der}"\n' in sg_server_swift, \
 assert 'type=TXT' in sg_server_swift and 'getaddrinfo' not in sg_server_swift, "StaticGramServer.swift: unsigned lookup is back"
 print("[patch] signed TXT key matches server_rsa.pub")
 
+# ---------------------------------------------------------------- 4o. gift view: close / "..." buttons stay on screen
+# GiftViewSheetContent is not scrollable; SheetComponent pins it to the bottom of the screen, so when the content
+# (owned unique gift: 314pt header + attributes table + buttons) is taller than the screen, its top - the NFT preview
+# with the close and "..." (copy link / share) buttons at y=16 - slides under the status bar / Dynamic Island and
+# the "..." button can't be tapped. Upstream does the same; here the button row is pushed down just enough to stay
+# below the status bar (capped at half of the header, phones only; nothing changes when the sheet fits).
+replace("submodules/TelegramUI/Components/Gifts/GiftViewScreen/Sources/GiftViewScreen.swift",
+        "            context.add(buttons\n"
+        "                .position(CGPoint(x: context.availableSize.width / 2.0, y: 16.0 + buttons.size.height / 2.0))\n"
+        "            )\n"
+        "            \n"
+        "            let effectiveBottomInset: CGFloat = environment.metrics.isTablet ? 0.0 : environment.safeInsets.bottom\n"
+        "            return CGSize(width: context.availableSize.width, height: originY + 5.0 + effectiveBottomInset)\n",
+        "            let effectiveBottomInset: CGFloat = environment.metrics.isTablet ? 0.0 : environment.safeInsets.bottom\n"
+        "            let sgContentHeight = originY + 5.0 + effectiveBottomInset\n"
+        "            var sgButtonsY: CGFloat = 16.0\n"
+        "            if !environment.metrics.isTablet && environment.metrics.widthClass != .regular {\n"
+        "                let sgScreen = environment.deviceMetrics.screenSize\n"
+        "                let sgIsLandscape = environment.orientation?.isLandscape ?? false\n"
+        "                let sgScreenHeight = sgIsLandscape ? min(sgScreen.width, sgScreen.height) : max(sgScreen.width, sgScreen.height)\n"
+        "                let sgGlassInset: CGFloat = sgIsLandscape ? 0.0 : 6.0\n"
+        "                let sgVisibleTop = sgScreenHeight - sgGlassInset - sgContentHeight\n"
+        "                let sgTopLimit = max(environment.statusBarHeight, environment.safeInsets.top) + 8.0\n"
+        "                sgButtonsY = min(max(16.0, sgTopLimit - sgVisibleTop), max(16.0, floor(headerHeight * 0.5)))\n"
+        "            }\n"
+        "            context.add(buttons\n"
+        "                .position(CGPoint(x: context.availableSize.width / 2.0, y: sgButtonsY + buttons.size.height / 2.0))\n"
+        "            )\n"
+        "            \n"
+        "            return CGSize(width: context.availableSize.width, height: sgContentHeight)\n")
+
 # ---------------------------------------------------------------- 5. build flags
 with open(path(".bazelrc"), "a") as f:
     f.write("\n# StaticGram CI\n"
